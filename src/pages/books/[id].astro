@@ -1,0 +1,250 @@
+---
+import { books } from '../../data/books.js';
+
+export function getStaticPaths() {
+  return books.map(book => ({
+    params: { id: book.id },
+    props: { book },
+  }));
+}
+
+const { book } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{book.title} — Friends of the Hearing Center</title>
+  </head>
+  <body>
+    <header>
+      <div class="header-inner">
+        <a href="/" class="back-link">← All books</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="book">
+        <div class="cover-col">
+          {book.coverImage
+            ? <img class="cover-img" src={book.coverImage} alt={`Cover of ${book.title}`} />
+            : <div class="cover-placeholder">{book.title[0]}</div>
+          }
+        </div>
+
+        <div class="detail-col">
+          <h1 class="title">{book.title}</h1>
+          <p class="author">by {book.author}</p>
+
+          <dl class="fields">
+            {book.illustrator && book.illustrator !== book.author && (
+              <>
+                <dt>Illustrator</dt>
+                <dd>{book.illustrator}</dd>
+              </>
+            )}
+
+            <dt>Book type</dt>
+            <dd>{book.bookType}</dd>
+
+            <dt>Age range</dt>
+            <dd>{book.ageRange}</dd>
+
+            <dt>Published</dt>
+            <dd>{book.publicationYear}</dd>
+
+            <dt>Representation</dt>
+            <dd>
+              <div class="tags">
+                {book.representationTypes.map(tag => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+            </dd>
+
+            {book.equipment.length > 0 && (
+              <>
+                <dt>Equipment / technology</dt>
+                <dd>
+                  <div class="tags">
+                    {book.equipment.map(item => (
+                      <span class="tag tag-equipment">{item}</span>
+                    ))}
+                  </div>
+                </dd>
+              </>
+            )}
+
+            <dt>D/HH/DB author</dt>
+            <dd>{book.deafAuthor ? 'Yes' : 'No'}</dd>
+          </dl>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Created by <a href="https://lemali.ca">Lemali Consulting</a></p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f9fafb;
+    color: #111827;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .back-link {
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: #111827;
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+    flex: 1;
+    width: 100%;
+  }
+
+  .book {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 600px) {
+    .book {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .cover-col {
+    position: sticky;
+    top: 1.5rem;
+  }
+
+  .cover-img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .cover-placeholder {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    font-weight: 700;
+    color: #9ca3af;
+    background: #f3f4f6;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    user-select: none;
+  }
+
+  .detail-col {
+    min-width: 0;
+  }
+
+  .title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.4rem;
+    line-height: 1.2;
+  }
+
+  .author {
+    font-size: 1.05rem;
+    color: #6b7280;
+    margin: 0 0 2rem;
+  }
+
+  .fields {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.6rem 1.5rem;
+    margin: 0;
+    align-items: baseline;
+  }
+
+  dt {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    white-space: nowrap;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #374151;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  .tag-equipment {
+    background: #faf5ff;
+    color: #7e22ce;
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.825rem;
+    color: #9ca3af;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+  }
+
+  footer a {
+    color: #6b7280;
+  }
+</style>
