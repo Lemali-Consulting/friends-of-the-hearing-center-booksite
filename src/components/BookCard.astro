@@ -1,8 +1,9 @@
 ---
+import { base } from '../utils/url.js';
 const { book } = Astro.props;
 ---
 
-<a href={`${import.meta.env.BASE_URL}books/${book.id}`} class="book-card">
+<a href={`${base}/books/${book.id}`} class="book-card">
   <div class="cover">
     {book.coverImage
       ? <img src={book.coverImage} alt={`Cover of ${book.title}`} />

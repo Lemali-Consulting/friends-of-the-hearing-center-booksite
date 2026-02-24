@@ -1,5 +1,6 @@
 ---
 import books from '../../data/books.json';
+import { base } from '../../utils/url.js';
 
 export function getStaticPaths() {
   return books.map(book => ({
@@ -23,7 +24,7 @@ const { book } = Astro.props;
   <body>
     <header>
       <div class="header-inner">
-        <a href={import.meta.env.BASE_URL} class="back-link">← All books</a>
+        <a href={`${base}/`} class="back-link">← All books</a>
       </div>
     </header>
 
