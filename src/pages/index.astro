@@ -1,6 +1,18 @@
 ---
 import books from '../data/books.json';
 import BookCard from '../components/BookCard.astro';
+
+// Sort by author last name (last word of first author before any & or ,)
+function getLastName(author) {
+  if (!author) return '\uffff'; // sort unknown authors to the end
+  const primary = author.split(/[,&]/)[0].trim();
+  const parts = primary.split(/\s+/);
+  return parts[parts.length - 1].toLowerCase();
+}
+
+const sorted = [...books].sort((a, b) =>
+  getLastName(a.author).localeCompare(getLastName(b.author))
+);
 ---
 
 <html lang="en">
@@ -26,7 +38,7 @@ import BookCard from '../components/BookCard.astro';
       </div>
 
       <div class="book-grid">
-        {books.map(book => <BookCard book={book} />)}
+        {sorted.map(book => <BookCard book={book} />)}
       </div>
     </main>
 
