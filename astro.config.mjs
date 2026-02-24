@@ -2,9 +2,9 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 
 export default defineConfig({
-  // site and base will be set when deploying to GitHub Pages.
-  // If using the GitHub Pages subdomain (no custom domain), set:
-  //   site: 'https://lemali-consulting.github.io'
-  //   base: '/friends-of-the-hearing-center-booksite'
+  // When building in GitHub Actions, set the correct site/base for
+  // GitHub Pages. In local dev, base defaults to '/' so localhost works.
+  site: 'https://lemali-consulting.github.io',
+  base: process.env.GITHUB_ACTIONS ? '/friends-of-the-hearing-center-booksite' : '/',
   integrations: [react()],
 });
