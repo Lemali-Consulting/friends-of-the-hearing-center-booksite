@@ -1,17 +1,114 @@
 ---
-
+import { books } from '../data/books.js';
+import BookCard from '../components/BookCard.astro';
 ---
 
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Friends of the Hearing Center — Book Collection</title>
+  </head>
+  <body>
+    <header>
+      <div class="header-inner">
+        <h1>Friends of the Hearing Center</h1>
+        <p class="subtitle">Books featuring Deaf, Hard of Hearing, and DeafBlind characters</p>
+      </div>
+    </header>
+
+    <main>
+      <div class="catalog-header">
+        <p class="book-count">{books.length} books</p>
+      </div>
+
+      <div class="book-grid">
+        {books.map(book => <BookCard book={book} />)}
+      </div>
+    </main>
+
+    <footer>
+      <p>Created by <a href="https://lemali.ca">Lemali Consulting</a></p>
+    </footer>
+  </body>
 </html>
+
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f9fafb;
+    color: #111827;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 2rem 1.5rem;
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    margin: 0 0 0.4rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #6b7280;
+    font-size: 1rem;
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    flex: 1;
+    width: 100%;
+  }
+
+  .catalog-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .book-count {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.5rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.825rem;
+    color: #9ca3af;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+  }
+
+  footer a {
+    color: #6b7280;
+  }
+</style>
