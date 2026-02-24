@@ -1,5 +1,5 @@
 ---
-import { books } from '../../data/books.js';
+import books from '../../data/books.json';
 
 export function getStaticPaths() {
   return books.map(book => ({
@@ -38,49 +38,56 @@ const { book } = Astro.props;
 
         <div class="detail-col">
           <h1 class="title">{book.title}</h1>
-          <p class="author">by {book.author}</p>
+          {book.author && <p class="author">by {book.author}</p>}
 
           <dl class="fields">
-            {book.illustrator && book.illustrator !== book.author && (
+            {book.bookType && (
               <>
-                <dt>Illustrator</dt>
-                <dd>{book.illustrator}</dd>
+                <dt>Book type</dt>
+                <dd>{book.bookType}</dd>
               </>
             )}
 
-            <dt>Book type</dt>
-            <dd>{book.bookType}</dd>
-
-            <dt>Age range</dt>
-            <dd>{book.ageRange}</dd>
-
-            <dt>Published</dt>
-            <dd>{book.publicationYear}</dd>
-
-            <dt>Representation</dt>
-            <dd>
-              <div class="tags">
-                {book.representationTypes.map(tag => (
-                  <span class="tag">{tag}</span>
-                ))}
-              </div>
-            </dd>
-
-            {book.equipment.length > 0 && (
+            {book.ageRange && (
               <>
-                <dt>Equipment / technology</dt>
+                <dt>Age range</dt>
+                <dd>{book.ageRange}</dd>
+              </>
+            )}
+
+            {book.publicationYear && (
+              <>
+                <dt>Published</dt>
+                <dd>{book.publicationYear}</dd>
+              </>
+            )}
+
+            {book.representationTypes.length > 0 && (
+              <>
+                <dt>Representation</dt>
                 <dd>
                   <div class="tags">
-                    {book.equipment.map(item => (
-                      <span class="tag tag-equipment">{item}</span>
+                    {book.representationTypes.map(tag => (
+                      <span class="tag">{tag}</span>
                     ))}
                   </div>
                 </dd>
               </>
             )}
 
-            <dt>D/HH/DB author</dt>
-            <dd>{book.deafAuthor ? 'Yes' : 'No'}</dd>
+            {book.authorInfo && (
+              <>
+                <dt>Author connection</dt>
+                <dd>{book.authorInfo}</dd>
+              </>
+            )}
+
+            {book.libraryAvailable !== null && (
+              <>
+                <dt>Carnegie Library</dt>
+                <dd>{book.libraryAvailable ? 'Available' : 'Not listed'}</dd>
+              </>
+            )}
           </dl>
         </div>
       </div>
@@ -228,11 +235,6 @@ const { book } = Astro.props;
     border-radius: 999px;
     background: #eff6ff;
     color: #1d4ed8;
-  }
-
-  .tag-equipment {
-    background: #faf5ff;
-    color: #7e22ce;
   }
 
   footer {

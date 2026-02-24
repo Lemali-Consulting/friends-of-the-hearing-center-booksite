@@ -1,10 +1,11 @@
 {
-  "name": "hilarious-houston",
+  "name": "friends-of-the-hearing-center-booksite",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/fetch-books.js && astro build",
+    "fetch-books": "node scripts/fetch-books.js",
     "preview": "astro preview",
     "astro": "astro"
   },

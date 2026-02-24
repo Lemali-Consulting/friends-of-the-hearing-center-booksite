@@ -1,9 +1,10 @@
-// @ts-check
 import { defineConfig } from 'astro/config';
-
 import react from '@astrojs/react';
 
-// https://astro.build/config
 export default defineConfig({
-  integrations: [react()]
+  // Update site/base when a custom domain is set up.
+  // Until then, this targets the GitHub Pages subdomain URL.
+  site: 'https://lemali-consulting.github.io',
+  base: '/friends-of-the-hearing-center-booksite',
+  integrations: [react()],
 });

@@ -13,15 +13,15 @@ const { book } = Astro.props;
     <h2 class="title">{book.title}</h2>
     <p class="author">{book.author}</p>
     <div class="meta">
-      <span class="age-range">{book.ageRange}</span>
-      <span class="dot">·</span>
-      <span class="book-type">{book.bookType}</span>
+      {book.ageRange && <span class="age-range">{book.ageRange}</span>}
+      {book.ageRange && book.bookType && <span class="dot">·</span>}
+      {book.bookType && <span class="book-type">{book.bookType}</span>}
     </div>
     <div class="tags">
       {book.representationTypes.map(tag => (
         <span class="tag">{tag}</span>
       ))}
-      {book.deafAuthor && <span class="tag tag-author">D/HH Author</span>}
+      {book.authorInfo && <span class="tag tag-author">{book.authorInfo} Author</span>}
     </div>
   </div>
 </a>
