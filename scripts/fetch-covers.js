@@ -26,6 +26,9 @@ const GOOGLE_BOOKS_SEARCH = 'https://www.googleapis.com/books/v1/volumes';
 const REQUEST_DELAY = 150;
 const USER_AGENT = 'FriendsOfHearingCenter-BookSite/1.0 (book cover fetcher)';
 
+// Google Books returns this exact-size PNG as a "no image available" placeholder
+const GOOGLE_PLACEHOLDER_SIZE = 15567;
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -136,10 +139,44 @@ async function searchGoogleBooks(title, author) {
   return { coverUrl, isbn };
 }
 
+// -- Cover URL validation -----------------------------------------------------
+
+/**
+ * Checks whether a cover URL points to a real image or a placeholder/error.
+ * Returns true if the image is valid, false if it should be discarded.
+ */
+async function isValidCover(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': USER_AGENT },
+    });
+
+    if (!res.ok) return false;
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.startsWith('image/')) return false;
+
+    const buf = Buffer.from(await res.arrayBuffer());
+
+    // Google Books "no image available" placeholder is exactly this size
+    if (url.includes('books.google.com') && buf.length === GOOGLE_PLACEHOLDER_SIZE) {
+      return false;
+    }
+
+    // Very small images (< 1000 bytes) are likely placeholders or 1x1 pixels
+    if (buf.length < 1000) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // -- Main ---------------------------------------------------------------------
 
 async function main() {
   const googleBackfillOnly = process.argv.includes('--google-backfill');
+  const validateOnly = process.argv.includes('--validate-only');
 
   if (!existsSync(BOOKS_PATH)) {
     console.error('books.json not found. Run `npm run fetch-books` first.');
@@ -154,9 +191,9 @@ async function main() {
     console.log(`Loaded ${Object.keys(covers).length} existing entries from covers.json`);
   }
 
-  // ── Phase 1: Open Library (skip if --google-backfill) ──────────────────
+  // ── Phase 1: Open Library (skip if --google-backfill or --validate-only) ──
 
-  if (!googleBackfillOnly) {
+  if (!googleBackfillOnly && !validateOnly) {
     const toFetch = books.filter(b => !(b.id in covers));
     console.log(`\n── Open Library ──`);
     console.log(`${toFetch.length} books to look up\n`);
@@ -193,17 +230,21 @@ async function main() {
     console.log(`\nOpen Library done — Found: ${found}, Missed: ${missed}, Errors: ${errors}`);
   }
 
-  // ── Phase 2: Google Books backfill ─────────────────────────────────────
+  // ── Phase 2: Google Books backfill (skip if --validate-only) ──────────
+
+  if (validateOnly) {
+    console.log('\nSkipping Google Books backfill (--validate-only)');
+  }
 
   // Find entries where Open Library found nothing useful
-  const needsBackfill = books.filter(b => {
+  const needsBackfill = validateOnly ? [] : books.filter(b => {
     const entry = covers[b.id];
     return entry && !entry.coverUrl && !entry.isbn;
   });
 
-  if (needsBackfill.length === 0) {
+  if (needsBackfill.length === 0 && !validateOnly) {
     console.log('\nNo books need Google Books backfill.');
-  } else {
+  } else if (needsBackfill.length > 0) {
     console.log(`\n── Google Books backfill ──`);
     console.log(`${needsBackfill.length} books to look up\n`);
 
@@ -241,6 +282,33 @@ async function main() {
 
     console.log(`\nGoogle Books done — Found: ${gFound}, Missed: ${gMissed}, Errors: ${gErrors}`);
   }
+
+  // ── Phase 3: Validate cover URLs ───────────────────────────────────────
+
+  const toValidate = Object.entries(covers).filter(([, v]) => v.coverUrl);
+  console.log(`\n── Validating ${toValidate.length} cover URLs ──\n`);
+
+  let valid = 0, invalid = 0;
+  for (let i = 0; i < toValidate.length; i++) {
+    const [id, entry] = toValidate[i];
+    const progress = `[${i + 1}/${toValidate.length}]`;
+
+    const ok = await isValidCover(entry.coverUrl);
+    if (ok) {
+      valid++;
+    } else {
+      console.log(`${progress} ${id} -> removed (placeholder/broken: ${entry.coverUrl})`);
+      covers[id] = { ...entry, coverUrl: null };
+      invalid++;
+    }
+
+    if ((i + 1) % 50 === 0 || i === toValidate.length - 1) {
+      writeFileSync(COVERS_PATH, JSON.stringify(covers, null, 2));
+    }
+    if (i < toValidate.length - 1) await sleep(REQUEST_DELAY);
+  }
+
+  console.log(`\nValidation done — Valid: ${valid}, Removed: ${invalid}`);
 
   // ── Summary ────────────────────────────────────────────────────────────
 
