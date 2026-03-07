@@ -1,0 +1,10 @@
+[
+  {
+    "id": "el-deafo-1",
+    "bookId": "el-deafo",
+    "reviewer": "Example Reviewer",
+    "stars": 5,
+    "text": "This is a placeholder review. Replace this file with real reviews as they are collected.",
+    "photo": null
+  }
+]

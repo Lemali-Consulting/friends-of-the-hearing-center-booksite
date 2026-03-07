@@ -1,0 +1,53 @@
+{
+  "name": "friends-of-the-hearing-center-booksite",
+  "initializeCommand": "token=$(gh auth token 2>/dev/null) && echo \"GH_TOKEN=$token\" > .devcontainer/.env.secrets || : > .devcontainer/.env.secrets",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "workbench.colorCustomizations": {
+          "statusBar.background": "#82e1e5",
+          "statusBar.foreground": "#15202b",
+          "statusBarItem.remoteBackground": "#82e1e5",
+          "statusBarItem.remoteForeground": "#15202b"
+        }
+      }
+    }
+  },
+  "postCreateCommand": {
+    "cli-tools": "npm install -g @anthropic-ai/claude-code @fission-ai/openspec@latest",
+    "project-deps": "npm install"
+  },
+  "runArgs": [
+    "--env-file",
+    ".devcontainer/.env.secrets"
+  ],
+  "containerEnv": {
+    "TZ": "America/New_York"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/node/.ssh,type=bind,readonly",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/home/node/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude.json,target=/home/node/.claude.json,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/gh,target=/home/node/.config/gh,type=bind,readonly"
+  ],
+  "forwardPorts": [4321],
+  "remoteUser": "node"
+}

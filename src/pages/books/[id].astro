@@ -1,152 +1,144 @@
 ---
-import books from '../../data/books.json';
-import { base } from '../../utils/url.js';
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
 
-export function getStaticPaths() {
-  return books.map(book => ({
-    params: { id: book.id },
-    props: { book },
-  }));
+export async function getStaticPaths() {
+  const books = await getCollection('books');
+  const coverEntries = await getCollection('covers');
+  const coverMap = new Map(coverEntries.map(c => [c.id, c.data]));
+  return books.map(entry => {
+    const cover = coverMap.get(entry.id);
+    return {
+      params: { id: entry.id },
+      props: {
+        bookId: entry.id,
+        book: {
+          ...entry.data,
+          coverImage: entry.data.coverImage || cover?.coverUrl || null,
+        },
+      },
+    };
+  });
 }
 
-const { book } = Astro.props;
+const { bookId, book } = Astro.props;
+const allReviews = await getCollection('reviews');
+const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{book.title} — Friends of the Hearing Center</title>
-  </head>
-  <body>
-    <header>
-      <div class="header-inner">
-        <a href={`${base}/`} class="back-link">← All books</a>
-      </div>
-    </header>
+<Layout title={`${book.title} -- Friends of the Hearing Center`} showBackLink>
+  <div class="book">
+    <div class="cover-col">
+      {book.coverImage
+        ? <button class="cover-btn" type="button" aria-label="View larger cover image" data-open-lightbox>
+            <img class="cover-img" src={book.coverImage} alt={`Cover of ${book.title}`} loading="lazy" />
+          </button>
+        : <div class="cover-placeholder">{book.title[0]}</div>
+      }
+    </div>
 
-    <main>
-      <div class="book">
-        <div class="cover-col">
-          {book.coverImage
-            ? <img class="cover-img" src={book.coverImage} alt={`Cover of ${book.title}`} />
-            : <div class="cover-placeholder">{book.title[0]}</div>
-          }
-        </div>
+    {book.coverImage && (
+      <dialog class="lightbox" data-lightbox>
+        <button class="lightbox-close" type="button" aria-label="Close" data-close-lightbox>&times;</button>
+        <img class="lightbox-img" src={book.coverImage} alt={`Cover of ${book.title}`} />
+      </dialog>
+    )}
 
-        <div class="detail-col">
-          <h1 class="title">{book.title}</h1>
-          {book.author && <p class="author">by {book.author}</p>}
+    <div class="detail-col">
+      <h1 class="title">{book.title}</h1>
+      {book.author && <p class="author">by {book.author}</p>}
+      {book.illustrator && <p class="illustrator">Illustrated by {book.illustrator}</p>}
 
-          <dl class="fields">
-            {book.bookType && (
-              <>
-                <dt>Book type</dt>
-                <dd>{book.bookType}</dd>
-              </>
-            )}
+      <dl class="fields">
+        {book.bookType && (
+          <>
+            <dt>Book type</dt>
+            <dd>{book.bookType}</dd>
+          </>
+        )}
 
-            {book.ageRange && (
-              <>
-                <dt>Age range</dt>
-                <dd>{book.ageRange}</dd>
-              </>
-            )}
+        {book.ageRange && (
+          <>
+            <dt>Age range</dt>
+            <dd>{book.ageRange}</dd>
+          </>
+        )}
 
-            {book.publicationYear && (
-              <>
-                <dt>Published</dt>
-                <dd>{book.publicationYear}</dd>
-              </>
-            )}
+        {book.publicationYear && (
+          <>
+            <dt>Published</dt>
+            <dd>{book.publicationYear}</dd>
+          </>
+        )}
 
-            {book.representationTypes.length > 0 && (
-              <>
-                <dt>Representation</dt>
-                <dd>
-                  <div class="tags">
-                    {book.representationTypes.map(tag => (
-                      <span class="tag">{tag}</span>
-                    ))}
-                  </div>
-                </dd>
-              </>
-            )}
+        {book.representationTypes.length > 0 && (
+          <>
+            <dt>Representation</dt>
+            <dd>
+              <div class="tags">
+                {book.representationTypes.map((tag: string) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+            </dd>
+          </>
+        )}
 
-            {book.authorInfo && (
-              <>
-                <dt>Author connection</dt>
-                <dd>{book.authorInfo}</dd>
-              </>
-            )}
+        {book.equipment.length > 0 && (
+          <>
+            <dt>Equipment</dt>
+            <dd>
+              <div class="tags">
+                {book.equipment.map((tag: string) => (
+                  <span class="tag tag-equip">{tag}</span>
+                ))}
+              </div>
+            </dd>
+          </>
+        )}
 
-            {book.libraryAvailable !== null && (
-              <>
-                <dt>Carnegie Library</dt>
-                <dd>{book.libraryAvailable ? 'Available' : 'Not listed'}</dd>
-              </>
-            )}
-          </dl>
-        </div>
-      </div>
-    </main>
+        {book.authorInfo && (
+          <>
+            <dt>Author connection</dt>
+            <dd>{book.authorInfo}</dd>
+          </>
+        )}
 
-    <footer>
-      <p>Created by <a href="https://lemali.ca">Lemali Consulting</a></p>
-    </footer>
-  </body>
-</html>
+        {book.libraryAvailable !== null && (
+          <>
+            <dt>Carnegie Library</dt>
+            <dd>{book.libraryAvailable ? 'Available' : 'Not listed'}</dd>
+          </>
+        )}
+      </dl>
+
+      {bookReviews.length > 0 && (
+        <section class="reviews">
+          <h2>What our friends say</h2>
+          {bookReviews.map(review => (
+            <div class="review">
+              <div class="review-header">
+                {review.data.photo && <img class="reviewer-photo" src={review.data.photo} alt={review.data.reviewer} />}
+                <div>
+                  <span class="reviewer-name">{review.data.reviewer}</span>
+                  <span class="stars" aria-label={`${review.data.stars} out of 5 stars`}>
+                    {'\u2605'.repeat(review.data.stars)}{'\u2606'.repeat(5 - review.data.stars)}
+                  </span>
+                </div>
+              </div>
+              <p class="review-text">{review.data.text}</p>
+            </div>
+          ))}
+        </section>
+      )}
+    </div>
+  </div>
+</Layout>
 
 <style>
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
-
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, sans-serif;
-    background: #f9fafb;
-    color: #111827;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  header {
-    background: #fff;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1rem 1.5rem;
-  }
-
-  .header-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .back-link {
-    font-size: 0.875rem;
-    color: #6b7280;
-    text-decoration: none;
-  }
-
-  .back-link:hover {
-    color: #111827;
-  }
-
-  main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2.5rem 1.5rem;
-    flex: 1;
-    width: 100%;
-  }
-
   .book {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 280px 1fr;
     gap: 2.5rem;
     align-items: start;
   }
@@ -162,10 +154,78 @@ const { book } = Astro.props;
     top: 1.5rem;
   }
 
+  .cover-btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
+    border-radius: 8px;
+  }
+
+  .cover-btn:hover .cover-img {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+  }
+
   .cover-img {
     width: 100%;
+    height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transition: box-shadow 0.2s ease;
+  }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 2rem;
+    border: none;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox:not([open]) {
+    display: none;
+  }
+
+  .lightbox::backdrop {
+    background: transparent;
+  }
+
+  .lightbox-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2.5rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+  }
+
+  .lightbox-close:hover {
+    opacity: 1;
   }
 
   .cover-placeholder {
@@ -176,11 +236,10 @@ const { book } = Astro.props;
     justify-content: center;
     font-size: 4rem;
     font-weight: 700;
-    color: #9ca3af;
+    color: #6b7280;
     background: #f3f4f6;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
-    user-select: none;
   }
 
   .detail-col {
@@ -197,7 +256,17 @@ const { book } = Astro.props;
   .author {
     font-size: 1.05rem;
     color: #6b7280;
+    margin: 0 0 0.25rem;
+  }
+
+  .illustrator {
+    font-size: 0.95rem;
+    color: #6b7280;
     margin: 0 0 2rem;
+  }
+
+  .author + .fields {
+    margin-top: 2rem;
   }
 
   .fields {
@@ -213,7 +282,7 @@ const { book } = Astro.props;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #9ca3af;
+    color: #6b7280;
     white-space: nowrap;
   }
 
@@ -234,20 +303,82 @@ const { book } = Astro.props;
     font-weight: 500;
     padding: 0.25rem 0.6rem;
     border-radius: 999px;
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: #e8f8f8;
+    color: #0c6b6c;
   }
 
-  footer {
-    text-align: center;
-    padding: 1.5rem;
-    font-size: 0.825rem;
-    color: #9ca3af;
+  .tag-equip {
+    background: #f3e8ff;
+    color: #7b2fbe;
+  }
+
+  /* Reviews */
+  .reviews {
+    margin-top: 2.5rem;
     border-top: 1px solid #e5e7eb;
-    background: #fff;
+    padding-top: 1.5rem;
   }
 
-  footer a {
-    color: #6b7280;
+  .reviews h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    color: #111827;
+  }
+
+  .review {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .reviewer-photo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .reviewer-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #111827;
+    display: block;
+  }
+
+  .stars {
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    color: #6ECFD0;
+  }
+
+  .review-text {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #374151;
+    line-height: 1.5;
   }
 </style>
+
+<script>
+  const openBtn = document.querySelector('[data-open-lightbox]');
+  const dialog = document.querySelector('[data-lightbox]') as HTMLDialogElement | null;
+  const closeBtn = document.querySelector('[data-close-lightbox]');
+
+  if (openBtn && dialog) {
+    openBtn.addEventListener('click', () => dialog.showModal());
+    closeBtn?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  }
+</script>

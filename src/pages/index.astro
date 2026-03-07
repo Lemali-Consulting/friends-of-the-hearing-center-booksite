@@ -1,108 +1,109 @@
 ---
-import books from '../data/books.json';
-import BookCard from '../components/BookCard.astro';
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import BookCatalog from '../components/BookCatalog.tsx';
+import { base } from '../utils/url.js';
 
-// Sort by author last name (last word of first author before any & or ,)
-function getLastName(author) {
-  if (!author) return '\uffff'; // sort unknown authors to the end
-  const primary = author.split(/[,&]/)[0].trim();
-  const parts = primary.split(/\s+/);
-  return parts[parts.length - 1].toLowerCase();
-}
-
-const sorted = [...books].sort((a, b) =>
-  getLastName(a.author).localeCompare(getLastName(b.author))
-);
+const bookEntries = await getCollection('books');
+const coverEntries = await getCollection('covers');
+const coverMap = new Map(coverEntries.map(c => [c.id, c.data]));
+const books = bookEntries.map(entry => {
+  const cover = coverMap.get(entry.id);
+  return {
+    id: entry.id,
+    ...entry.data,
+    coverImage: entry.data.coverImage || cover?.coverUrl || null,
+  };
+});
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Friends of the Hearing Center — Book Collection</title>
-  </head>
-  <body>
-    <header>
-      <div class="header-inner">
-        <h1>Friends of the Hearing Center</h1>
-        <p class="subtitle">Books featuring Deaf, Hard of Hearing, and DeafBlind characters</p>
-      </div>
-    </header>
+<Layout title="Friends of the Hearing Center -- Book Collection">
+  <BookCatalog client:load books={books} base={base} />
+</Layout>
 
-    <main>
-      <div class="catalog-header">
-        <p class="book-count">{books.length} books</p>
-      </div>
-
-      <div class="book-grid">
-        {sorted.map(book => <BookCard book={book} />)}
-      </div>
-    </main>
-
-    <footer>
-      <p>Created by <a href="https://lemali.ca">Lemali Consulting</a></p>
-    </footer>
-  </body>
-</html>
-
-<style>
-  *, *::before, *::after {
-    box-sizing: border-box;
+<style is:global>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, sans-serif;
-    background: #f9fafb;
-    color: #111827;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  header {
-    background: #fff;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 2rem 1.5rem;
-  }
-
-  .header-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  h1 {
-    margin: 0 0 0.4rem;
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #111827;
-  }
-
-  .subtitle {
-    margin: 0;
-    color: #6b7280;
-    font-size: 1rem;
-  }
-
-  main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
-    flex: 1;
+  .catalog {
     width: 100%;
   }
 
-  .catalog-header {
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
     margin-bottom: 1.25rem;
   }
 
-  .book-count {
-    margin: 0;
-    font-size: 0.875rem;
+  .search-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.95rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #111827;
+    outline: none;
+  }
+
+  .search-input:focus {
+    border-color: #1B3F8B;
+    box-shadow: 0 0 0 3px rgba(27, 63, 139, 0.12);
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .filters select {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.825rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    min-width: 0;
+  }
+
+  .filters select:focus {
+    border-color: #1B3F8B;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(27, 63, 139, 0.12);
+  }
+
+  .clear-btn {
+    align-self: flex-start;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
     color: #6b7280;
+    cursor: pointer;
+  }
+
+  .clear-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+
+  .result-count {
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    color: #4b5563;
   }
 
   .book-grid {
@@ -111,16 +112,139 @@ const sorted = [...books].sort((a, b) =>
     gap: 1.5rem;
   }
 
-  footer {
-    text-align: center;
-    padding: 1.5rem;
-    font-size: 0.825rem;
-    color: #9ca3af;
-    border-top: 1px solid #e5e7eb;
+  .book-card {
+    display: flex;
+    flex-direction: column;
     background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
 
-  footer a {
+  .book-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .book-card:focus-visible {
+    outline: 3px solid #1B3F8B;
+    outline-offset: 2px;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .cover {
+    aspect-ratio: 2 / 3;
+    background: #f3f4f6;
+    overflow: hidden;
+  }
+
+  .cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: 700;
     color: #6b7280;
+  }
+
+  .info {
+    padding: 0.875rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0;
+    color: #111827;
+  }
+
+  .card-author {
+    font-size: 0.825rem;
+    color: #6b7280;
+    margin: 0;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.775rem;
+    color: #6b7280;
+    margin-top: 0.1rem;
+  }
+
+  .dot {
+    color: #d1d5db;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+  }
+
+  .tag {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: #e8f8f8;
+    color: #0c6b6c;
+  }
+
+  .tag-equip {
+    background: #f3e8ff;
+    color: #7b2fbe;
+  }
+
+  .tag-author {
+    background: #e8edf7;
+    color: #1B3F8B;
+  }
+
+  .load-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .load-more button {
+    padding: 0.65rem 1.5rem;
+    font-size: 0.9rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .load-more button:hover {
+    background: #f3f4f6;
+  }
+
+  .no-results {
+    text-align: center;
+    color: #6b7280;
+    padding: 3rem 1rem;
+    font-size: 1rem;
   }
 </style>

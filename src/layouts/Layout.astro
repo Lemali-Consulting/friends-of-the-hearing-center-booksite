@@ -1,0 +1,166 @@
+---
+import { base } from '../utils/url.js';
+
+interface Props {
+  title: string;
+  showBackLink?: boolean;
+}
+
+const { title, showBackLink = false } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <link rel="icon" href={`${base}/favicon.ico`} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content="A curated catalog of 800+ books featuring Deaf, Hard of Hearing, and DeafBlind characters, maintained by Friends of the Hearing Center at UPMC Children's Hospital of Pittsburgh." />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <header>
+      <div class="header-inner">
+        {showBackLink ? (
+          <a href={`${base}/`} class="back-link">&larr; All books</a>
+        ) : (
+          <>
+            <div class="logo-row">
+              <div class="logo-placeholder" aria-hidden="true">FHC</div>
+              <div>
+                <h1><a href={`${base}/`}>Friends of the Hearing Center</a></h1>
+                <p class="subtitle">Books featuring Deaf, Hard of Hearing, and DeafBlind characters</p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </header>
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <footer>
+      <p>Created by <a href="https://lemali.ca">Lemali Consulting</a></p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    z-index: 1000;
+    padding: 0.5rem 1rem;
+    background: #1B3F8B;
+    color: #fff;
+    border-radius: 0 0 6px 6px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f9fafb;
+    color: #111827;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .logo-placeholder {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1B3F8B, #6ECFD0, #9B4DCA);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    margin: 0 0 0.2rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+  }
+
+  h1 a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #4b5563;
+    font-size: 0.9rem;
+  }
+
+  .back-link {
+    font-size: 0.875rem;
+    color: #4b5563;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: #1B3F8B;
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    flex: 1;
+    width: 100%;
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.825rem;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+  }
+
+  footer a {
+    color: #1B3F8B;
+  }
+</style>
