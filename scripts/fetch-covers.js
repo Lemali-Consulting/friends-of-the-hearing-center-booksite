@@ -11,6 +11,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { createHash } from 'crypto';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -28,6 +29,11 @@ const USER_AGENT = 'FriendsOfHearingCenter-BookSite/1.0 (book cover fetcher)';
 
 // Google Books returns this exact-size PNG as a "no image available" placeholder
 const GOOGLE_PLACEHOLDER_SIZE = 15567;
+
+// Known placeholder image MD5 hashes (e.g. Open Library "No image available")
+const PLACEHOLDER_HASHES = new Set([
+  '681e43bb536038b0ecb97ed0c13b5948', // Open Library "No image available" JPEG
+]);
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -162,6 +168,10 @@ async function isValidCover(url) {
     if (url.includes('books.google.com') && buf.length === GOOGLE_PLACEHOLDER_SIZE) {
       return false;
     }
+
+    // Check against known placeholder image hashes
+    const hash = createHash('md5').update(buf).digest('hex');
+    if (PLACEHOLDER_HASHES.has(hash)) return false;
 
     // Very small images (< 1000 bytes) are likely placeholders or 1x1 pixels
     if (buf.length < 1000) return false;

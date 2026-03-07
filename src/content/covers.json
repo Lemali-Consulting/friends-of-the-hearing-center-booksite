@@ -85,7 +85,7 @@
     "olid": "/works/OL19731643W"
   },
   "a-screaming-kind-of-day": {
-    "coverUrl": "https://covers.openlibrary.org/b/id/1864517-L.jpg",
+    "coverUrl": null,
     "isbn": "9781550416619",
     "olid": "/works/OL3474027W"
   },
@@ -155,7 +155,7 @@
     "olid": "/works/OL2103146W"
   },
   "aim-high": {
-    "coverUrl": "https://covers.openlibrary.org/b/id/13843983-L.jpg",
+    "coverUrl": null,
     "isbn": "9781515872849",
     "olid": "/works/OL25347562W"
   },
@@ -180,7 +180,7 @@
     "olid": "/works/OL42457528W"
   },
   "all-he-knew": {
-    "coverUrl": "https://covers.openlibrary.org/b/id/12361218-L.jpg",
+    "coverUrl": null,
     "isbn": "9780374313005",
     "olid": "/works/OL20756630W"
   },
@@ -3560,7 +3560,7 @@
     "olid": null
   },
   "the-reckless-kind": {
-    "coverUrl": "https://covers.openlibrary.org/b/id/11069426-L.jpg",
+    "coverUrl": null,
     "isbn": "9781641293808",
     "olid": "/works/OL24464596W"
   },
