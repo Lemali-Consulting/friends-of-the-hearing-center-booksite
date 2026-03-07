@@ -20,16 +20,16 @@ npm install
 
 # Fetch book data from Google Sheets and start the dev server
 npm run fetch-books   # writes src/data/books.json
-npm run dev           # starts Astro dev server on http://localhost:4321
+npm run dev           # starts Astro dev server on http://localhost:4321 (binds 0.0.0.0)
 ```
 
-The dev server runs on **port 4321**.
+The dev server runs on **port 4321** and binds to `0.0.0.0` (`--host`) so it is accessible outside the dev container.
 
 ## Key Commands
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start Astro dev server (port 4321) |
+| `npm run dev` | Start Astro dev server (port 4321, `--host` for external access) |
 | `npm run build` | Fetch books from Google Sheets + build static site to `dist/` |
 | `npm run fetch-books` | Fetch book data only (writes `src/data/books.json`) |
 | `npm run preview` | Preview the production build locally |

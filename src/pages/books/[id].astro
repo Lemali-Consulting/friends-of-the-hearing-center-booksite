@@ -107,7 +107,9 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
         {book.libraryAvailable !== null && (
           <>
             <dt>Carnegie Library</dt>
-            <dd>{book.libraryAvailable ? 'Available' : 'Not listed'}</dd>
+            <dd class={book.libraryAvailable ? 'available' : ''}>
+              {book.libraryAvailable ? 'Available' : 'Not listed'}
+            </dd>
           </>
         )}
       </dl>
@@ -136,22 +138,32 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
 </Layout>
 
 <style>
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .book {
     display: grid;
     grid-template-columns: 280px 1fr;
-    gap: 2.5rem;
+    gap: 3rem;
     align-items: start;
+    animation: slideUp 0.5s ease;
   }
 
   @media (max-width: 600px) {
     .book {
       grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .cover-col {
+      max-width: 240px;
     }
   }
 
   .cover-col {
     position: sticky;
-    top: 1.5rem;
+    top: 5.5rem;
   }
 
   .cover-btn {
@@ -161,19 +173,20 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     border: none;
     background: none;
     cursor: zoom-in;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
   }
 
   .cover-btn:hover .cover-img {
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 32px rgba(26, 26, 46, 0.2);
+    transform: scale(1.01);
   }
 
   .cover-img {
     width: 100%;
     height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    transition: box-shadow 0.2s ease;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 20px rgba(26, 26, 46, 0.12);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
   }
 
   /* Lightbox */
@@ -187,7 +200,7 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     margin: 0;
     padding: 2rem;
     border: none;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(26, 26, 46, 0.9);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -205,8 +218,8 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     max-width: 90vw;
     max-height: 90vh;
     object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.4);
   }
 
   .lightbox-close {
@@ -215,17 +228,16 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     right: 1.5rem;
     background: none;
     border: none;
-    color: #fff;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 2.5rem;
     cursor: pointer;
     line-height: 1;
     padding: 0.25rem 0.5rem;
-    opacity: 0.8;
-    transition: opacity 0.15s;
+    transition: color 0.15s;
   }
 
   .lightbox-close:hover {
-    opacity: 1;
+    color: #fff;
   }
 
   .cover-placeholder {
@@ -234,12 +246,14 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 4rem;
+    font-family: var(--font-display);
+    font-size: 4.5rem;
     font-weight: 700;
-    color: #6b7280;
-    background: #f3f4f6;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    color: var(--color-ink-muted);
+    opacity: 0.35;
+    background: linear-gradient(145deg, var(--color-cream-dark), var(--color-cream));
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--color-border);
   }
 
   .detail-col {
@@ -247,22 +261,27 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
   }
 
   .title {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
     margin: 0 0 0.4rem;
-    line-height: 1.2;
+    line-height: 1.15;
+    color: var(--color-ink);
+    font-optical-sizing: auto;
   }
 
   .author {
     font-size: 1.05rem;
-    color: #6b7280;
+    color: var(--color-ink-muted);
     margin: 0 0 0.25rem;
+    font-weight: 400;
   }
 
   .illustrator {
     font-size: 0.95rem;
-    color: #6b7280;
+    color: var(--color-ink-muted);
     margin: 0 0 2rem;
+    font-style: italic;
   }
 
   .author + .fields {
@@ -272,66 +291,75 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
   .fields {
     display: grid;
     grid-template-columns: max-content 1fr;
-    gap: 0.6rem 1.5rem;
+    gap: 0.75rem 1.5rem;
     margin: 0;
     align-items: baseline;
   }
 
   dt {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6b7280;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-muted);
     white-space: nowrap;
+    font-family: var(--font-body);
   }
 
   dd {
     margin: 0;
     font-size: 0.95rem;
-    color: #374151;
+    color: var(--color-ink-light);
+  }
+
+  dd.available {
+    color: var(--color-teal);
+    font-weight: 500;
   }
 
   .tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem;
+    gap: 0.35rem;
   }
 
   .tag {
-    font-size: 0.75rem;
+    font-size: 0.775rem;
     font-weight: 500;
-    padding: 0.25rem 0.6rem;
+    font-family: var(--font-body);
+    padding: 0.25rem 0.65rem;
     border-radius: 999px;
-    background: #e8f8f8;
-    color: #0c6b6c;
+    background: var(--color-teal-soft);
+    color: var(--color-teal);
   }
 
   .tag-equip {
-    background: #f3e8ff;
-    color: #7b2fbe;
+    background: var(--color-plum-soft);
+    color: var(--color-plum);
   }
 
   /* Reviews */
   .reviews {
     margin-top: 2.5rem;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1.5px solid var(--color-border-light);
     padding-top: 1.5rem;
   }
 
   .reviews h2 {
-    font-size: 1.1rem;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
     font-weight: 600;
     margin: 0 0 1rem;
-    color: #111827;
+    color: var(--color-ink);
   }
 
   .review {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 1rem 1.25rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.25rem;
     margin-bottom: 0.75rem;
+    box-shadow: var(--shadow-card);
   }
 
   .review-header {
@@ -346,26 +374,27 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     height: 36px;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid var(--color-border-light);
   }
 
   .reviewer-name {
     font-weight: 600;
     font-size: 0.9rem;
-    color: #111827;
+    color: var(--color-ink);
     display: block;
   }
 
   .stars {
     font-size: 0.85rem;
     letter-spacing: 0.1em;
-    color: #6ECFD0;
+    color: var(--color-teal-dark);
   }
 
   .review-text {
     margin: 0;
     font-size: 0.9rem;
-    color: #374151;
-    line-height: 1.5;
+    color: var(--color-ink-light);
+    line-height: 1.6;
   }
 </style>
 

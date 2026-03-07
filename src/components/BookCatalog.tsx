@@ -67,15 +67,46 @@ export default function BookCatalog({ books, base }: Props) {
   const [sortBy, setSortBy] = useState(params.sort ?? 'author');
   const [visible, setVisible] = useState(PAGE_SIZE);
 
-  // Derive filter options from data
-  const bookTypes = useMemo(() => unique(books.map(b => b.bookType)), [books]);
+  // Base filter: applies search + all filters except the one being computed
+  const baseFilter = useCallback((exclude: string) => {
+    const q = search.toLowerCase();
+    return books.filter(b => {
+      if (q && !b.title.toLowerCase().includes(q) && !(b.author?.toLowerCase().includes(q))) return false;
+      if (exclude !== 'type' && bookType && b.bookType !== bookType) return false;
+      if (exclude !== 'age' && ageGroup && !b.ageGroups.includes(ageGroup)) return false;
+      if (exclude !== 'rep' && representation && !b.representationTypes.includes(representation)) return false;
+      if (exclude !== 'equip' && equipmentFilter && !b.equipment.includes(equipmentFilter)) return false;
+      if (exclude !== 'author' && authorConn && !b.authorConnection.includes(authorConn)) return false;
+      return true;
+    });
+  }, [books, search, bookType, ageGroup, representation, equipmentFilter, authorConn]);
+
+  // Derive filter options dynamically — each dropdown only shows values compatible with the other active filters
+  const bookTypes = useMemo(() => unique(baseFilter('type').map(b => b.bookType)), [baseFilter]);
   const ageGroupsAvail = useMemo(() => {
-    const present = new Set(books.flatMap(b => b.ageGroups));
+    const present = new Set(baseFilter('age').flatMap(b => b.ageGroups));
     return AGE_GROUP_ORDER.filter(g => present.has(g));
-  }, [books]);
-  const representations = useMemo(() => unique(books.flatMap(b => b.representationTypes)), [books]);
-  const equipmentOptions = useMemo(() => unique(books.flatMap(b => b.equipment)), [books]);
-  const authorConnections = useMemo(() => unique(books.flatMap(b => b.authorConnection)), [books]);
+  }, [baseFilter]);
+  const representations = useMemo(() => unique(baseFilter('rep').flatMap(b => b.representationTypes)), [baseFilter]);
+  const equipmentOptions = useMemo(() => unique(baseFilter('equip').flatMap(b => b.equipment)), [baseFilter]);
+  const authorConnections = useMemo(() => unique(baseFilter('author').flatMap(b => b.authorConnection)), [baseFilter]);
+
+  // Auto-clear a filter if its selected value is no longer among the available options
+  useEffect(() => {
+    if (bookType && !bookTypes.includes(bookType)) setBookType('');
+  }, [bookType, bookTypes]);
+  useEffect(() => {
+    if (ageGroup && !ageGroupsAvail.includes(ageGroup)) setAgeGroup('');
+  }, [ageGroup, ageGroupsAvail]);
+  useEffect(() => {
+    if (representation && !representations.includes(representation)) setRepresentation('');
+  }, [representation, representations]);
+  useEffect(() => {
+    if (equipmentFilter && !equipmentOptions.includes(equipmentFilter)) setEquipmentFilter('');
+  }, [equipmentFilter, equipmentOptions]);
+  useEffect(() => {
+    if (authorConn && !authorConnections.includes(authorConn)) setAuthorConn('');
+  }, [authorConn, authorConnections]);
 
   // Sync filters to URL
   const syncUrl = useCallback(() => {
@@ -111,18 +142,26 @@ export default function BookCatalog({ books, base }: Props) {
     });
   }, [books, search, bookType, ageGroup, representation, equipmentFilter, authorConn]);
 
-  // Sort
+  // Sort — books with covers are shown first, then by the chosen sort order
   const sorted = useMemo(() => {
     const list = [...filtered];
-    switch (sortBy) {
-      case 'title':
-        return list.sort((a, b) => a.title.localeCompare(b.title));
-      case 'year':
-        return list.sort((a, b) => (b.publicationYear ?? 0) - (a.publicationYear ?? 0));
-      case 'author':
-      default:
-        return list.sort((a, b) => getLastName(a.author).localeCompare(getLastName(b.author)));
-    }
+    const compare = (a: any, b: any) => {
+      switch (sortBy) {
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'year':
+          return (b.publicationYear ?? 0) - (a.publicationYear ?? 0);
+        case 'author':
+        default:
+          return getLastName(a.author).localeCompare(getLastName(b.author));
+      }
+    };
+    return list.sort((a, b) => {
+      const aCover = a.coverImage ? 0 : 1;
+      const bCover = b.coverImage ? 0 : 1;
+      if (aCover !== bCover) return aCover - bCover;
+      return compare(a, b);
+    });
   }, [filtered, sortBy]);
 
   const shown = sorted.slice(0, visible);
@@ -132,7 +171,7 @@ export default function BookCatalog({ books, base }: Props) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel || !hasMore) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -143,7 +182,7 @@ export default function BookCatalog({ books, base }: Props) {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [sorted.length]);
+  }, [visible, hasMore]);
 
   const hasActiveFilters = search || bookType || ageGroup || representation || equipmentFilter || authorConn;
 
@@ -245,7 +284,7 @@ export default function BookCatalog({ books, base }: Props) {
 
       {hasMore && (
         <>
-          <div ref={sentinelRef} className="load-more-sentinel" />
+          <div ref={sentinelRef} className="load-more-sentinel" style={{ height: '1px' }} />
           <div className="load-more">
             <button type="button" onClick={() => setVisible(v => v + PAGE_SIZE)}>
               Show more books

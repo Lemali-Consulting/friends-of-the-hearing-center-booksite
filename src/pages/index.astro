@@ -38,26 +38,33 @@ const books = bookEntries.map(entry => {
     width: 100%;
   }
 
+  /* -- Controls -- */
   .controls {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
 
   .search-input {
     width: 100%;
-    padding: 0.625rem 0.875rem;
+    padding: 0.7rem 1rem;
     font-size: 0.95rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: #fff;
-    color: #111827;
+    font-family: var(--font-body);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-card);
+    color: var(--color-ink);
     outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-input::placeholder {
+    color: var(--color-ink-muted);
   }
 
   .search-input:focus {
-    border-color: #1B3F8B;
+    border-color: var(--color-accent);
     box-shadow: 0 0 0 3px rgba(27, 63, 139, 0.12);
   }
 
@@ -68,77 +75,135 @@ const books = bookEntries.map(entry => {
   }
 
   .filters select {
-    padding: 0.45rem 0.65rem;
+    padding: 0.5rem 0.7rem;
     font-size: 0.825rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background: #fff;
-    color: #374151;
+    font-family: var(--font-body);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-card);
+    color: var(--color-ink-light);
     cursor: pointer;
     min-width: 0;
+    transition: border-color 0.2s;
   }
 
   .filters select:focus {
-    border-color: #1B3F8B;
+    border-color: var(--color-accent);
     outline: none;
     box-shadow: 0 0 0 3px rgba(27, 63, 139, 0.12);
   }
 
   .clear-btn {
     align-self: flex-start;
-    padding: 0.4rem 0.75rem;
+    padding: 0.4rem 0.85rem;
     font-size: 0.8rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background: #fff;
-    color: #6b7280;
+    font-family: var(--font-body);
+    font-weight: 500;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-card);
+    color: var(--color-ink-muted);
     cursor: pointer;
+    transition: all 0.15s;
   }
 
   .clear-btn:hover {
-    background: #f3f4f6;
-    color: #111827;
+    background: var(--color-accent-soft);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
   }
 
   .result-count {
     margin: 0 0 1rem;
-    font-size: 0.875rem;
-    color: #4b5563;
+    font-size: 0.85rem;
+    color: var(--color-ink-muted);
+    font-weight: 400;
   }
 
+  /* -- Grid -- */
   .book-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
     gap: 1.5rem;
+  }
+
+  /* -- Cards -- */
+  @keyframes cardIn {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .book-card {
     display: flex;
     flex-direction: column;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    background: var(--color-card);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     text-decoration: none;
     color: inherit;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1),
+                box-shadow 0.25s cubic-bezier(0.2, 0.9, 0.3, 1),
+                border-color 0.2s;
+    animation: cardIn 0.4s ease both;
+    position: relative;
+  }
+
+  /* Stagger animation for first 48 cards via nth-child */
+  .book-card:nth-child(1) { animation-delay: 0ms; }
+  .book-card:nth-child(2) { animation-delay: 20ms; }
+  .book-card:nth-child(3) { animation-delay: 40ms; }
+  .book-card:nth-child(4) { animation-delay: 60ms; }
+  .book-card:nth-child(5) { animation-delay: 80ms; }
+  .book-card:nth-child(6) { animation-delay: 100ms; }
+  .book-card:nth-child(7) { animation-delay: 120ms; }
+  .book-card:nth-child(8) { animation-delay: 140ms; }
+  .book-card:nth-child(9) { animation-delay: 160ms; }
+  .book-card:nth-child(10) { animation-delay: 180ms; }
+  .book-card:nth-child(11) { animation-delay: 200ms; }
+  .book-card:nth-child(12) { animation-delay: 220ms; }
+  .book-card:nth-child(n+13) { animation-delay: 240ms; }
+
+  .book-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, var(--color-navy), var(--color-teal));
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    opacity: 0;
+    transition: opacity 0.25s;
   }
 
   .book-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-border);
+  }
+
+  .book-card:hover::before {
+    opacity: 1;
   }
 
   .book-card:focus-visible {
-    outline: 3px solid #1B3F8B;
+    outline: 3px solid var(--color-accent);
     outline-offset: 2px;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
   }
 
   .cover {
     aspect-ratio: 2 / 3;
-    background: #f3f4f6;
+    background: var(--color-cream-dark);
     overflow: hidden;
   }
 
@@ -146,6 +211,11 @@ const books = bookEntries.map(entry => {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  .book-card:hover .cover img {
+    transform: scale(1.03);
   }
 
   .cover-placeholder {
@@ -154,97 +224,112 @@ const books = bookEntries.map(entry => {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
+    font-family: var(--font-display);
+    font-size: 3.5rem;
     font-weight: 700;
-    color: #6b7280;
+    color: var(--color-ink-muted);
+    opacity: 0.4;
+    background: linear-gradient(145deg, var(--color-cream-dark), var(--color-cream));
   }
 
   .info {
     padding: 0.875rem 1rem 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.3rem;
     flex: 1;
   }
 
   .card-title {
+    font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 600;
     line-height: 1.3;
     margin: 0;
-    color: #111827;
+    color: var(--color-ink);
   }
 
   .card-author {
-    font-size: 0.825rem;
-    color: #6b7280;
+    font-size: 0.8rem;
+    color: var(--color-ink-muted);
     margin: 0;
+    font-weight: 400;
   }
 
   .card-meta {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.775rem;
-    color: #6b7280;
+    font-size: 0.75rem;
+    color: var(--color-ink-muted);
     margin-top: 0.1rem;
   }
 
   .dot {
-    color: #d1d5db;
+    color: var(--color-border);
   }
 
   .card-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.3rem;
-    margin-top: 0.4rem;
+    margin-top: 0.35rem;
   }
 
   .tag {
-    font-size: 0.7rem;
+    font-size: 0.675rem;
     font-weight: 500;
+    font-family: var(--font-body);
     padding: 0.2rem 0.5rem;
     border-radius: 999px;
-    background: #e8f8f8;
-    color: #0c6b6c;
+    background: var(--color-teal-soft);
+    color: var(--color-teal);
+    letter-spacing: 0.01em;
   }
 
   .tag-equip {
-    background: #f3e8ff;
-    color: #7b2fbe;
+    background: var(--color-plum-soft);
+    color: var(--color-plum);
   }
 
   .tag-author {
-    background: #e8edf7;
-    color: #1B3F8B;
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
   }
 
+  /* -- Load more -- */
   .load-more {
     display: flex;
     justify-content: center;
-    margin-top: 2rem;
+    margin-top: 2.5rem;
   }
 
   .load-more button {
-    padding: 0.65rem 1.5rem;
+    padding: 0.7rem 2rem;
     font-size: 0.9rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: #fff;
-    color: #374151;
-    cursor: pointer;
+    font-family: var(--font-body);
     font-weight: 500;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-card);
+    color: var(--color-ink-light);
+    cursor: pointer;
+    transition: all 0.2s;
   }
 
   .load-more button:hover {
-    background: #f3f4f6;
+    background: var(--color-navy);
+    border-color: var(--color-navy);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(27, 63, 139, 0.25);
   }
 
   .no-results {
     text-align: center;
-    color: #6b7280;
-    padding: 3rem 1rem;
+    color: var(--color-ink-muted);
+    padding: 4rem 1rem;
     font-size: 1rem;
+    font-family: var(--font-display);
+    font-style: italic;
   }
 </style>

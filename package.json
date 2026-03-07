@@ -3,11 +3,11 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev --host",
     "build": "node scripts/fetch-books.js && astro build",
     "fetch-books": "node scripts/fetch-books.js",
     "fetch-covers": "node scripts/fetch-covers.js",
-    "preview": "astro preview",
+    "preview": "astro preview --host",
     "astro": "astro"
   },
   "dependencies": {
