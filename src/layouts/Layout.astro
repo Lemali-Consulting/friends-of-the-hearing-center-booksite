@@ -54,7 +54,7 @@ const { title, showBackLink = false } = Astro.props;
 
     <footer>
       <div class="footer-inner">
-        <p>Created by <a href="https://lemali.ca">Lemali Consulting</a> for UPMC Children's Hospital of Pittsburgh</p>
+        <p>Created by <a href="https://lemaliconsulting.com" class="lemali-link"><img src={`${base}/lemali-logo.svg`} alt="Lemali Consulting" class="lemali-logo" /></a> for UPMC Children's Hospital of Pittsburgh</p>
       </div>
     </footer>
   </body>
@@ -246,5 +246,22 @@ const { title, showBackLink = false } = Astro.props;
 
   footer a:hover {
     text-decoration: underline;
+  }
+
+  .lemali-link {
+    text-decoration: none;
+  }
+
+  .lemali-link:hover {
+    text-decoration: none;
+  }
+
+  .lemali-logo {
+    display: inline-block;
+    height: 1.6em;
+    width: auto;
+    vertical-align: middle;
+    position: relative;
+    top: -0.1em;
   }
 </style>

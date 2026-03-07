@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 102 34" width="204" height="68">
+  <!-- Lemali Consulting — Primary Logo (for light backgrounds) -->
+  <!-- Requires IBM Plex Sans + IBM Plex Mono (Google Fonts) -->
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&amp;family=IBM+Plex+Sans:wght@600&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Bracket (vertically centered in 34px viewBox) -->
+  <g transform="translate(0,2)">
+    <path d="M22 0 L2.5 0 A2.5 2.5 0 0 0 0 2.5 L0 27.5 A2.5 2.5 0 0 0 2.5 30 L22 30 L22 27 L3 27 L3 3 L22 3 Z" fill="#2563EB"/>
+    <circle cx="17" cy="15" r="3" fill="#E5A920"/>
+  </g>
+
+  <!-- Text group -->
+  <text x="32" y="15" font-family="'IBM Plex Sans', sans-serif" font-weight="600" font-size="18" letter-spacing="-0.18" fill="#0F1D2F">Lemali</text>
+  <text x="32" y="27" font-family="'IBM Plex Mono', monospace" font-weight="400" font-size="10" letter-spacing="0.8" fill="#94a3b8">CONSULTING</text>
+</svg>
