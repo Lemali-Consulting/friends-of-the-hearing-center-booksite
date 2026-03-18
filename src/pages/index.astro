@@ -92,6 +92,8 @@ const books = bookEntries.map(entry => {
   .search-input:focus {
     border-color: var(--color-accent);
     box-shadow: 0 0 0 3px rgba(27, 63, 139, 0.12);
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
   }
 
   .filters {
@@ -115,8 +117,9 @@ const books = bookEntries.map(entry => {
 
   .filters select:focus {
     border-color: var(--color-accent);
-    outline: none;
     box-shadow: 0 0 0 3px rgba(27, 63, 139, 0.12);
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
   }
 
   .clear-btn {
@@ -137,6 +140,11 @@ const books = bookEntries.map(entry => {
     background: var(--color-accent-soft);
     border-color: var(--color-accent);
     color: var(--color-accent);
+  }
+
+  .clear-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   .result-count {
@@ -363,6 +371,11 @@ const books = bookEntries.map(entry => {
     border-color: var(--color-navy);
     color: #fff;
     box-shadow: 0 4px 16px rgba(27, 63, 139, 0.25);
+  }
+
+  .load-more button:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   .no-results {

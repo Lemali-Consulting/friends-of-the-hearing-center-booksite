@@ -27,7 +27,7 @@ const allReviews = await getCollection('reviews');
 const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
 ---
 
-<Layout title={`${book.title} -- Hearing Center Book Catalogue`} showBackLink>
+<Layout title={`${book.title} — Hearing Center Book Catalogue`} showBackLink>
   <div class="book">
     <div class="cover-col">
       {book.coverImage
@@ -115,7 +115,7 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           <>
             <dt>Carnegie Library</dt>
             <dd class={book.libraryAvailable ? 'available' : ''}>
-              {book.libraryAvailable ? 'Available' : 'Not listed'}
+              {book.libraryAvailable ? '✓ Available' : 'Not listed'}
             </dd>
           </>
         )}
@@ -183,6 +183,11 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     border-radius: var(--radius-lg);
   }
 
+  .cover-btn:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
   .cover-btn:hover .cover-img {
     box-shadow: 0 8px 32px rgba(26, 26, 46, 0.2);
     transform: scale(1.01);
@@ -246,6 +251,11 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
 
   .lightbox-close:hover {
     color: #fff;
+  }
+
+  .lightbox-close:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
   }
 
   .cover-placeholder {

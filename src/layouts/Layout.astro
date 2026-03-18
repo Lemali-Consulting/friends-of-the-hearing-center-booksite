@@ -34,30 +34,32 @@ const { title, showBackLink = false } = Astro.props;
     <div class="page-bg" aria-hidden="true"></div>
 
     <header>
-      <div class="header-inner">
-        {showBackLink ? (
-          <a href={`${base}/`} class="back-link">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            All books
-          </a>
-        ) : (
-          <div class="logo-row">
-            <img class="logo-img" src={`${base}/image.png`} alt="Hearing Center Book Catalogue logo" />
-            <div>
-              <h1><a href={`${base}/`}>Hearing Center Book Catalogue</a></h1>
-              <p class="subtitle">
-                <span class="subtitle-icons" aria-hidden="true">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3.5C5.5 2 7.5 1.5 9 3c1 1 1 2.5.5 4-.5 1.2-1.5 2-2 3-.5.8-.5 1.5-.5 2"/><path d="M10 2.5c.5-.3 1.2-.2 1.5.2s.5 1.5 0 2.5l-.5 1"/><circle cx="7" cy="12" r=".7" fill="currentColor" stroke="none"/></svg>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5a1 1 0 0 1 2 0V8"/><path d="M6 7V4.5a1 1 0 0 1 2 0V8"/><path d="M8 7V5a1 1 0 0 1 2 0v3.5c0 2-1.5 3.5-3.5 3.5S3 11 3 10"/></svg>
-                </span>
-                Books featuring Deaf, Hard of Hearing &amp; DeafBlind characters
-              </p>
+      <nav aria-label="Site">
+        <div class="header-inner">
+          {showBackLink ? (
+            <a href={`${base}/`} class="back-link">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              All books
+            </a>
+          ) : (
+            <div class="logo-row">
+              <img class="logo-img" src={`${base}/image.png`} alt="Hearing Center Book Catalogue logo" />
+              <div>
+                <h1><a href={`${base}/`}>Hearing Center Book Catalogue</a></h1>
+                <p class="subtitle">
+                  <span class="subtitle-icons" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3.5C5.5 2 7.5 1.5 9 3c1 1 1 2.5.5 4-.5 1.2-1.5 2-2 3-.5.8-.5 1.5-.5 2"/><path d="M10 2.5c.5-.3 1.2-.2 1.5.2s.5 1.5 0 2.5l-.5 1"/><circle cx="7" cy="12" r=".7" fill="currentColor" stroke="none"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5a1 1 0 0 1 2 0V8"/><path d="M6 7V4.5a1 1 0 0 1 2 0V8"/><path d="M8 7V5a1 1 0 0 1 2 0v3.5c0 2-1.5 3.5-3.5 3.5S3 11 3 10"/></svg>
+                  </span>
+                  Books featuring Deaf, Hard of Hearing &amp; DeafBlind characters
+                </p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </nav>
     </header>
 
     {showBackLink && (
@@ -113,15 +115,15 @@ const { title, showBackLink = false } = Astro.props;
     --color-card: #FDFCFA;
     --color-ink: #1A1A2E;
     --color-ink-light: #3D3D56;
-    --color-ink-muted: #7A7A8E;
+    --color-ink-muted: #5C5C6F;
     --color-navy: #1B3F8B;
     --color-navy-soft: #E0E7F5;
     --color-accent: #1B3F8B;
     --color-accent-soft: #E0E7F5;
-    --color-teal: #6ECFD0;
-    --color-teal-dark: #3BAFB0;
+    --color-teal: #1A8A8B;
+    --color-teal-dark: #1A8A8B;
     --color-teal-soft: #E0F5F5;
-    --color-plum: #9B4DCA;
+    --color-plum: #7B2FA8;
     --color-plum-soft: #F0E3FA;
     --color-border: #DDD9D1;
     --color-border-light: #E8E5DF;
@@ -300,5 +302,13 @@ const { title, showBackLink = false } = Astro.props;
     vertical-align: middle;
     position: relative;
     top: -0.1em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 </style>

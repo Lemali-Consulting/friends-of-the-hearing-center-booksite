@@ -255,7 +255,7 @@ export default function BookCatalog({ books, base }: Props) {
 
   return (
     <div className="catalog">
-      <div className="controls">
+      <div className="controls" role="search" aria-label="Filter books">
         <label htmlFor="book-search" className="sr-only">Search by title or author</label>
         <input
           id="book-search"
