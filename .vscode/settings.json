@@ -1,0 +1,16 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "workbench.colorCustomizations": {
+    "statusBar.background": "#82e1e5",
+    "statusBar.foreground": "#15202b",
+    "statusBarItem.remoteBackground": "#82e1e5",
+    "statusBarItem.remoteForeground": "#15202b"
+  }
+}

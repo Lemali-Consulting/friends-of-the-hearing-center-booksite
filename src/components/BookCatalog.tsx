@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { getTagIconSvg } from '../utils/tag-icons';
 
 interface Book {
   id: string;
@@ -35,6 +36,15 @@ const AGE_GROUP_ORDER = [
   'Adult',
 ];
 
+function getAgeIndex(book: { ageGroups: string[] }): number {
+  let min = AGE_GROUP_ORDER.length;
+  for (const g of book.ageGroups) {
+    const i = AGE_GROUP_ORDER.indexOf(g);
+    if (i !== -1 && i < min) min = i;
+  }
+  return min;
+}
+
 function getLastName(author: string | null): string {
   if (!author) return '\uffff';
   const primary = author.split(/[,&]/)[0].trim();
@@ -67,6 +77,13 @@ export default function BookCatalog({ books, base }: Props) {
   const [sortBy, setSortBy] = useState(params.sort ?? 'author');
   const [visible, setVisible] = useState(PAGE_SIZE);
 
+  // Reveal the catalog now that React has hydrated with the correct filter state.
+  // The SSR HTML shows the full unfiltered catalog; a blocking <script> in <head>
+  // hides it via .catalog-loading when URL has query params.
+  useEffect(() => {
+    document.documentElement.classList.remove('catalog-loading');
+  }, []);
+
   // Base filter: applies search + all filters except the one being computed
   const baseFilter = useCallback((exclude: string) => {
     const q = search.toLowerCase();
@@ -82,14 +99,39 @@ export default function BookCatalog({ books, base }: Props) {
   }, [books, search, bookType, ageGroup, representation, equipmentFilter, authorConn]);
 
   // Derive filter options dynamically — each dropdown only shows values compatible with the other active filters
-  const bookTypes = useMemo(() => unique(baseFilter('type').map(b => b.bookType)), [baseFilter]);
+  // Also compute counts: how many books match each option value
+  function countBy(items: Book[], accessor: (b: Book) => (string | null | undefined)[]): Map<string, number> {
+    const counts = new Map<string, number>();
+    for (const b of items) {
+      for (const v of accessor(b)) {
+        if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }
+
+  const typeBase = useMemo(() => baseFilter('type'), [baseFilter]);
+  const bookTypes = useMemo(() => unique(typeBase.map(b => b.bookType)), [typeBase]);
+  const bookTypeCounts = useMemo(() => countBy(typeBase, b => [b.bookType]), [typeBase]);
+
+  const ageBase = useMemo(() => baseFilter('age'), [baseFilter]);
   const ageGroupsAvail = useMemo(() => {
-    const present = new Set(baseFilter('age').flatMap(b => b.ageGroups));
+    const present = new Set(ageBase.flatMap(b => b.ageGroups));
     return AGE_GROUP_ORDER.filter(g => present.has(g));
-  }, [baseFilter]);
-  const representations = useMemo(() => unique(baseFilter('rep').flatMap(b => b.representationTypes)), [baseFilter]);
-  const equipmentOptions = useMemo(() => unique(baseFilter('equip').flatMap(b => b.equipment)), [baseFilter]);
-  const authorConnections = useMemo(() => unique(baseFilter('author').flatMap(b => b.authorConnection)), [baseFilter]);
+  }, [ageBase]);
+  const ageGroupCounts = useMemo(() => countBy(ageBase, b => b.ageGroups), [ageBase]);
+
+  const repBase = useMemo(() => baseFilter('rep'), [baseFilter]);
+  const representations = useMemo(() => unique(repBase.flatMap(b => b.representationTypes)), [repBase]);
+  const repCounts = useMemo(() => countBy(repBase, b => b.representationTypes), [repBase]);
+
+  const equipBase = useMemo(() => baseFilter('equip'), [baseFilter]);
+  const equipmentOptions = useMemo(() => unique(equipBase.flatMap(b => b.equipment)), [equipBase]);
+  const equipCounts = useMemo(() => countBy(equipBase, b => b.equipment), [equipBase]);
+
+  const authorBase = useMemo(() => baseFilter('author'), [baseFilter]);
+  const authorConnections = useMemo(() => unique(authorBase.flatMap(b => b.authorConnection)), [authorBase]);
+  const authorCounts = useMemo(() => countBy(authorBase, b => b.authorConnection), [authorBase]);
 
   // Auto-clear a filter if its selected value is no longer among the available options
   useEffect(() => {
@@ -121,6 +163,7 @@ export default function BookCatalog({ books, base }: Props) {
     const qs = p.toString();
     const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
     window.history.replaceState(null, '', url);
+    sessionStorage.setItem('catalogQuery', qs);
   }, [search, bookType, ageGroup, representation, equipmentFilter, authorConn, sortBy]);
 
   useEffect(() => { syncUrl(); }, [syncUrl]);
@@ -149,8 +192,23 @@ export default function BookCatalog({ books, base }: Props) {
       switch (sortBy) {
         case 'title':
           return a.title.localeCompare(b.title);
+        case 'title-desc':
+          return b.title.localeCompare(a.title);
         case 'year':
           return (b.publicationYear ?? 0) - (a.publicationYear ?? 0);
+        case 'year-asc':
+          return (a.publicationYear ?? 0) - (b.publicationYear ?? 0);
+        case 'age':
+        case 'age-desc': {
+          const ai = getAgeIndex(a);
+          const bi = getAgeIndex(b);
+          const aNoAge = ai === AGE_GROUP_ORDER.length ? 1 : 0;
+          const bNoAge = bi === AGE_GROUP_ORDER.length ? 1 : 0;
+          if (aNoAge !== bNoAge) return aNoAge - bNoAge;
+          return sortBy === 'age' ? ai - bi : bi - ai;
+        }
+        case 'author-desc':
+          return getLastName(b.author).localeCompare(getLastName(a.author));
         case 'author':
         default:
           return getLastName(a.author).localeCompare(getLastName(b.author));
@@ -210,30 +268,35 @@ export default function BookCatalog({ books, base }: Props) {
         <div className="filters">
           <select aria-label="Filter by book type" value={bookType} onChange={e => setBookType(e.target.value)}>
             <option value="">All types</option>
-            {bookTypes.map(t => <option key={t} value={t}>{t}</option>)}
+            {bookTypes.map(t => <option key={t} value={t}>{t} ({bookTypeCounts.get(t) ?? 0})</option>)}
           </select>
           <select aria-label="Filter by age group" value={ageGroup} onChange={e => setAgeGroup(e.target.value)}>
             <option value="">All ages</option>
-            {ageGroupsAvail.map(a => <option key={a} value={a}>{a}</option>)}
+            {ageGroupsAvail.map(a => <option key={a} value={a}>{a} ({ageGroupCounts.get(a) ?? 0})</option>)}
           </select>
           <select aria-label="Filter by representation" value={representation} onChange={e => setRepresentation(e.target.value)}>
             <option value="">All representation</option>
-            {representations.map(r => <option key={r} value={r}>{r}</option>)}
+            {representations.map(r => <option key={r} value={r}>{r} ({repCounts.get(r) ?? 0})</option>)}
           </select>
           {equipmentOptions.length > 0 && (
             <select aria-label="Filter by equipment" value={equipmentFilter} onChange={e => setEquipmentFilter(e.target.value)}>
               <option value="">All equipment</option>
-              {equipmentOptions.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+              {equipmentOptions.map(eq => <option key={eq} value={eq}>{eq} ({equipCounts.get(eq) ?? 0})</option>)}
             </select>
           )}
           <select aria-label="Filter by author connection" value={authorConn} onChange={e => setAuthorConn(e.target.value)}>
             <option value="">Any author</option>
-            {authorConnections.map(s => <option key={s} value={s}>{s}</option>)}
+            {authorConnections.map(s => <option key={s} value={s}>{s} ({authorCounts.get(s) ?? 0})</option>)}
           </select>
           <select aria-label="Sort order" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-            <option value="author">Sort: Author</option>
-            <option value="title">Sort: Title</option>
+            <option value="author">Sort: Author A–Z</option>
+            <option value="author-desc">Sort: Author Z–A</option>
+            <option value="title">Sort: Title A–Z</option>
+            <option value="title-desc">Sort: Title Z–A</option>
+            <option value="age">Sort: Age (youngest)</option>
+            <option value="age-desc">Sort: Age (oldest)</option>
             <option value="year">Sort: Year (newest)</option>
+            <option value="year-asc">Sort: Year (oldest)</option>
           </select>
         </div>
         {hasActiveFilters && (
@@ -268,10 +331,16 @@ export default function BookCatalog({ books, base }: Props) {
               </div>
               <div className="card-tags">
                 {book.representationTypes.map(tag => (
-                  <span key={tag} className="tag">{tag}</span>
+                  <span key={tag} className="tag">
+                    {getTagIconSvg(tag) && <span className="tag-icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: getTagIconSvg(tag) }} />}
+                    {tag}
+                  </span>
                 ))}
                 {book.equipment.map(tag => (
-                  <span key={tag} className="tag tag-equip">{tag}</span>
+                  <span key={tag} className="tag tag-equip">
+                    {getTagIconSvg(tag) && <span className="tag-icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: getTagIconSvg(tag) }} />}
+                    {tag}
+                  </span>
                 ))}
                 {book.authorConnection.length > 0 && (
                   <span className="tag tag-author">{book.authorConnection.join(', ')} Author</span>

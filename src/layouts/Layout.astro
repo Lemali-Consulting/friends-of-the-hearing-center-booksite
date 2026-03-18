@@ -16,11 +16,17 @@ const { title, showBackLink = false } = Astro.props;
     <link rel="icon" href={`${base}/favicon.ico`} />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="description" content="A curated catalog of 800+ books featuring Deaf, Hard of Hearing, and DeafBlind characters, maintained by Friends of the Hearing Center at UPMC Children's Hospital of Pittsburgh." />
+    <meta name="description" content="A curated catalog of 800+ books featuring Deaf, Hard of Hearing, and DeafBlind characters, maintained by Hearing Center Book Catalogue." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <title>{title}</title>
+    <script is:inline>
+      if (location.search) document.documentElement.classList.add('catalog-loading');
+    </script>
+    <style is:inline>
+      .catalog-loading .catalog { visibility: hidden; }
+    </style>
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -38,15 +44,31 @@ const { title, showBackLink = false } = Astro.props;
           </a>
         ) : (
           <div class="logo-row">
-            <img class="logo-img" src={`${base}/image.png`} alt="Friends of the Hearing Center logo" />
+            <img class="logo-img" src={`${base}/image.png`} alt="Hearing Center Book Catalogue logo" />
             <div>
-              <h1><a href={`${base}/`}>Friends of the Hearing Center</a></h1>
-              <p class="subtitle">Books featuring Deaf, Hard of Hearing &amp; DeafBlind characters</p>
+              <h1><a href={`${base}/`}>Hearing Center Book Catalogue</a></h1>
+              <p class="subtitle">
+                <span class="subtitle-icons" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3.5C5.5 2 7.5 1.5 9 3c1 1 1 2.5.5 4-.5 1.2-1.5 2-2 3-.5.8-.5 1.5-.5 2"/><path d="M10 2.5c.5-.3 1.2-.2 1.5.2s.5 1.5 0 2.5l-.5 1"/><circle cx="7" cy="12" r=".7" fill="currentColor" stroke="none"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5a1 1 0 0 1 2 0V8"/><path d="M6 7V4.5a1 1 0 0 1 2 0V8"/><path d="M8 7V5a1 1 0 0 1 2 0v3.5c0 2-1.5 3.5-3.5 3.5S3 11 3 10"/></svg>
+                </span>
+                Books featuring Deaf, Hard of Hearing &amp; DeafBlind characters
+              </p>
             </div>
           </div>
         )}
       </div>
     </header>
+
+    {showBackLink && (
+      <script is:inline>
+        {
+          const link = document.querySelector('.back-link');
+          const qs = sessionStorage.getItem('catalogQuery');
+          if (link && qs) link.href = link.href.split('?')[0] + '?' + qs;
+        }
+      </script>
+    )}
 
     <main id="main-content">
       <slot />
@@ -54,7 +76,7 @@ const { title, showBackLink = false } = Astro.props;
 
     <footer>
       <div class="footer-inner">
-        <p>Created by <a href="https://lemaliconsulting.com" class="lemali-link"><img src={`${base}/lemali-logo.svg`} alt="Lemali Consulting" class="lemali-logo" /></a> for UPMC Children's Hospital of Pittsburgh</p>
+        <p>Created by <a href="https://lemaliconsulting.com" class="lemali-link"><img src={`${base}/lemali-logo.svg`} alt="Lemali Consulting" class="lemali-logo" /></a> for Hearing Center Book Catalogue</p>
       </div>
     </footer>
   </body>
@@ -194,6 +216,21 @@ const { title, showBackLink = false } = Astro.props;
     font-size: 0.9rem;
     font-weight: 400;
     letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .subtitle-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    color: var(--color-teal-dark);
+    opacity: 0.7;
+  }
+
+  .subtitle-icons svg {
+    display: block;
   }
 
   .back-link {

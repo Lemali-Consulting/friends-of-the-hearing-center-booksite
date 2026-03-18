@@ -17,11 +17,37 @@ const books = bookEntries.map(entry => {
 });
 ---
 
-<Layout title="Friends of the Hearing Center -- Book Collection">
+<Layout title="Hearing Center Book Catalogue">
+  <div class="catalog-spinner" aria-label="Loading books">
+    <div class="spinner"></div>
+  </div>
   <BookCatalog client:load books={books} base={base} />
 </Layout>
 
 <style is:global>
+  .catalog-spinner {
+    display: none;
+    justify-content: center;
+    padding: 6rem 0;
+  }
+
+  .catalog-loading .catalog-spinner {
+    display: flex;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
   .sr-only {
     position: absolute;
     width: 1px;
@@ -277,6 +303,9 @@ const books = bookEntries.map(entry => {
   }
 
   .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     font-size: 0.675rem;
     font-weight: 500;
     font-family: var(--font-body);
@@ -285,6 +314,18 @@ const books = bookEntries.map(entry => {
     background: var(--color-teal-soft);
     color: var(--color-teal);
     letter-spacing: 0.01em;
+  }
+
+  .tag-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .tag-icon svg {
+    display: block;
+    width: 12px;
+    height: 12px;
   }
 
   .tag-equip {

@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import { getTagIconSvg } from '../../utils/tag-icons';
 
 export async function getStaticPaths() {
   const books = await getCollection('books');
@@ -26,7 +27,7 @@ const allReviews = await getCollection('reviews');
 const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
 ---
 
-<Layout title={`${book.title} -- Friends of the Hearing Center`} showBackLink>
+<Layout title={`${book.title} -- Hearing Center Book Catalogue`} showBackLink>
   <div class="book">
     <div class="cover-col">
       {book.coverImage
@@ -77,7 +78,10 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
             <dd>
               <div class="tags">
                 {book.representationTypes.map((tag: string) => (
-                  <span class="tag">{tag}</span>
+                  <span class="tag">
+                    {getTagIconSvg(tag) && <span class="tag-icon" aria-hidden="true" set:html={getTagIconSvg(tag)} />}
+                    {tag}
+                  </span>
                 ))}
               </div>
             </dd>
@@ -90,7 +94,10 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
             <dd>
               <div class="tags">
                 {book.equipment.map((tag: string) => (
-                  <span class="tag tag-equip">{tag}</span>
+                  <span class="tag tag-equip">
+                    {getTagIconSvg(tag) && <span class="tag-icon" aria-hidden="true" set:html={getTagIconSvg(tag)} />}
+                    {tag}
+                  </span>
                 ))}
               </div>
             </dd>
@@ -325,6 +332,9 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
   }
 
   .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
     font-size: 0.775rem;
     font-weight: 500;
     font-family: var(--font-body);
@@ -332,6 +342,18 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     border-radius: 999px;
     background: var(--color-teal-soft);
     color: var(--color-teal);
+  }
+
+  .tag-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .tag-icon :global(svg) {
+    display: block;
+    width: 14px;
+    height: 14px;
   }
 
   .tag-equip {
