@@ -1,176 +1,181 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import BookCatalog from '../components/BookCatalog.tsx';
 import { base } from '../utils/url.js';
+import { featuredBookIds } from '../data/featured.js';
+import { getTagIconSvg } from '../utils/tag-icons';
 
 const bookEntries = await getCollection('books');
-const coverEntries = await getCollection('covers');
-const coverMap = new Map(coverEntries.map(c => [c.id, c.data]));
-const books = bookEntries.map(entry => {
-  const cover = coverMap.get(entry.id);
-  return {
+const metadataEntries = await getCollection('metadata');
+const metadataMap = new Map(metadataEntries.map(c => [c.id, c.data]));
+
+const bookMap = new Map(bookEntries.map(entry => {
+  const meta = metadataMap.get(entry.id);
+  return [entry.id, {
     id: entry.id,
     ...entry.data,
-    coverImage: entry.data.coverImage || cover?.coverUrl || null,
-  };
-});
+    coverImage: entry.data.coverImage || meta?.coverUrl || null,
+  }];
+}));
+
+const featuredBooks = featuredBookIds
+  .map(id => bookMap.get(id))
+  .filter(Boolean);
+
+const totalBooks = bookEntries.length;
 ---
 
-<Layout title="Hearing Center Book Catalogue">
-  <div class="catalog-spinner" aria-label="Loading books">
-    <div class="spinner"></div>
-  </div>
-  <BookCatalog client:load books={books} base={base} />
+<Layout title="Hearing Center Book Catalogue" isLanding>
+  <section class="hero">
+    <h2 class="hero-heading">Discover Stories That Reflect Every&nbsp;Child</h2>
+    <p class="hero-text">
+      Explore our curated collection of <strong>{totalBooks}+ books</strong> featuring Deaf, Hard of Hearing, and DeafBlind characters.
+    </p>
+    <a href={`${base}/books`} class="cta-button">
+      Browse the Full Catalog
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7.5 5L12.5 10L7.5 15"/>
+      </svg>
+    </a>
+  </section>
+
+  <section class="featured">
+    <h2 class="section-heading">Featured Books</h2>
+    <div class="featured-grid">
+      {featuredBooks.map(book => (
+        <a href={`${base}/books/${book.id}`} class="book-card">
+          <div class="cover">
+            {book.coverImage
+              ? <img src={book.coverImage} alt={`Cover of ${book.title}`} loading="lazy" />
+              : <div class="cover-placeholder" aria-hidden="true">{book.title[0]}</div>
+            }
+          </div>
+          <div class="info">
+            <h3 class="card-title">{book.title}</h3>
+            <p class="card-author">{book.author}</p>
+            <div class="card-meta">
+              {book.ageRange && <span>{book.ageRange}</span>}
+              {book.ageRange && book.bookType && <span class="dot">&middot;</span>}
+              {book.bookType && <span>{book.bookType}</span>}
+            </div>
+            <div class="card-tags">
+              {book.representationTypes.map((tag: string) => (
+                <span class="tag">
+                  {getTagIconSvg(tag) && <span class="tag-icon" aria-hidden="true" set:html={getTagIconSvg(tag)} />}
+                  {tag}
+                </span>
+              ))}
+              {book.equipment.map((tag: string) => (
+                <span class="tag tag-equip">
+                  {getTagIconSvg(tag) && <span class="tag-icon" aria-hidden="true" set:html={getTagIconSvg(tag)} />}
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <p class="cta-text">Ready to find the perfect book?</p>
+    <a href={`${base}/books`} class="cta-button cta-button-lg">
+      Browse All {totalBooks} Books
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7.5 5L12.5 10L7.5 15"/>
+      </svg>
+    </a>
+  </section>
 </Layout>
 
-<style is:global>
-  .catalog-spinner {
-    display: none;
-    justify-content: center;
-    padding: 6rem 0;
+<style>
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 3rem 1rem 2.5rem;
+    max-width: 700px;
+    margin: 0 auto;
   }
 
-  .catalog-loading .catalog-spinner {
-    display: flex;
-  }
-
-  .spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--color-border);
-    border-top-color: var(--color-accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  .catalog {
-    width: 100%;
-  }
-
-  /* -- Controls -- */
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .search-input {
-    width: 100%;
-    padding: 0.7rem 1rem;
-    font-size: 0.95rem;
-    font-family: var(--font-body);
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-card);
+  .hero-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: 800;
+    line-height: 1.15;
     color: var(--color-ink);
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    margin: 0 0 1rem;
+    font-optical-sizing: auto;
   }
 
-  .search-input::placeholder {
-    color: var(--color-ink-muted);
-  }
-
-  .search-input:focus {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(27, 63, 139, 0.12);
-    outline: 2px solid var(--color-accent);
-    outline-offset: -2px;
-  }
-
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .filters select {
-    padding: 0.5rem 0.7rem;
-    font-size: 0.825rem;
-    font-family: var(--font-body);
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background: var(--color-card);
+  .hero-text {
+    font-size: 1.05rem;
+    line-height: 1.65;
     color: var(--color-ink-light);
-    cursor: pointer;
-    min-width: 0;
-    transition: border-color 0.2s;
+    margin: 0 0 2rem;
   }
 
-  .filters select:focus {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(27, 63, 139, 0.12);
-    outline: 2px solid var(--color-accent);
-    outline-offset: -2px;
+  .hero-text strong {
+    color: var(--color-ink);
+    font-weight: 600;
   }
 
-  .clear-btn {
-    align-self: flex-start;
-    padding: 0.4rem 0.85rem;
-    font-size: 0.8rem;
+  /* CTA Button */
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1.75rem;
+    font-size: 1rem;
+    font-weight: 600;
     font-family: var(--font-body);
-    font-weight: 500;
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background: var(--color-card);
-    color: var(--color-ink-muted);
-    cursor: pointer;
-    transition: all 0.15s;
+    color: #fff;
+    background: var(--color-teal);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
   }
 
-  .clear-btn:hover {
-    background: var(--color-accent-soft);
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+  .cta-button:hover {
+    background: var(--color-teal-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(26, 138, 139, 0.3);
   }
 
-  .clear-btn:focus-visible {
-    outline: 2px solid var(--color-accent);
+  .cta-button:focus-visible {
+    outline: 3px solid var(--color-accent);
     outline-offset: 2px;
   }
 
-  .result-count {
-    margin: 0 0 1rem;
-    font-size: 0.85rem;
-    color: var(--color-ink-muted);
-    font-weight: 400;
+  .cta-button-lg {
+    padding: 0.85rem 2rem;
+    font-size: 1.05rem;
   }
 
-  /* -- Grid -- */
-  .book-grid {
+  /* Featured section */
+  .featured {
+    padding: 1rem 0 2rem;
+  }
+
+  .section-heading {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin: 0 0 1.25rem;
+    text-align: center;
+  }
+
+  .featured-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
     gap: 1.5rem;
   }
 
-  /* -- Cards -- */
+  /* Card styles — reuse catalog card design */
   @keyframes cardIn {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .book-card {
@@ -190,27 +195,19 @@ const books = bookEntries.map(entry => {
     position: relative;
   }
 
-  /* Stagger animation for first 48 cards via nth-child */
   .book-card:nth-child(1) { animation-delay: 0ms; }
-  .book-card:nth-child(2) { animation-delay: 20ms; }
-  .book-card:nth-child(3) { animation-delay: 40ms; }
-  .book-card:nth-child(4) { animation-delay: 60ms; }
-  .book-card:nth-child(5) { animation-delay: 80ms; }
-  .book-card:nth-child(6) { animation-delay: 100ms; }
-  .book-card:nth-child(7) { animation-delay: 120ms; }
-  .book-card:nth-child(8) { animation-delay: 140ms; }
-  .book-card:nth-child(9) { animation-delay: 160ms; }
-  .book-card:nth-child(10) { animation-delay: 180ms; }
-  .book-card:nth-child(11) { animation-delay: 200ms; }
-  .book-card:nth-child(12) { animation-delay: 220ms; }
-  .book-card:nth-child(n+13) { animation-delay: 240ms; }
+  .book-card:nth-child(2) { animation-delay: 40ms; }
+  .book-card:nth-child(3) { animation-delay: 80ms; }
+  .book-card:nth-child(4) { animation-delay: 120ms; }
+  .book-card:nth-child(5) { animation-delay: 160ms; }
+  .book-card:nth-child(6) { animation-delay: 200ms; }
+  .book-card:nth-child(7) { animation-delay: 240ms; }
+  .book-card:nth-child(8) { animation-delay: 280ms; }
 
   .book-card::before {
     content: '';
     position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
+    left: 0; top: 0; bottom: 0;
     width: 4px;
     background: linear-gradient(to bottom, var(--color-navy), var(--color-teal));
     border-radius: var(--radius-lg) 0 0 var(--radius-lg);
@@ -224,9 +221,7 @@ const books = bookEntries.map(entry => {
     border-color: var(--color-border);
   }
 
-  .book-card:hover::before {
-    opacity: 1;
-  }
+  .book-card:hover::before { opacity: 1; }
 
   .book-card:focus-visible {
     outline: 3px solid var(--color-accent);
@@ -330,7 +325,7 @@ const books = bookEntries.map(entry => {
     flex-shrink: 0;
   }
 
-  .tag-icon svg {
+  .tag-icon :global(svg) {
     display: block;
     width: 12px;
     height: 12px;
@@ -341,49 +336,30 @@ const books = bookEntries.map(entry => {
     color: var(--color-plum);
   }
 
-  .tag-author {
-    background: var(--color-accent-soft);
-    color: var(--color-accent);
-  }
-
-  /* -- Load more -- */
-  .load-more {
-    display: flex;
-    justify-content: center;
-    margin-top: 2.5rem;
-  }
-
-  .load-more button {
-    padding: 0.7rem 2rem;
-    font-size: 0.9rem;
-    font-family: var(--font-body);
-    font-weight: 500;
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-card);
-    color: var(--color-ink-light);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .load-more button:hover {
-    background: var(--color-navy);
-    border-color: var(--color-navy);
-    color: #fff;
-    box-shadow: 0 4px 16px rgba(27, 63, 139, 0.25);
-  }
-
-  .load-more button:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-
-  .no-results {
+  /* Bottom CTA */
+  .cta-section {
     text-align: center;
-    color: var(--color-ink-muted);
-    padding: 4rem 1rem;
-    font-size: 1rem;
+    padding: 2rem 1rem 3rem;
+    border-top: 1px solid var(--color-border-light);
+    margin-top: 1rem;
+  }
+
+  .cta-text {
     font-family: var(--font-display);
-    font-style: italic;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 0 0 1rem;
+  }
+
+  @media (max-width: 500px) {
+    .hero {
+      padding: 2rem 0.5rem 1.5rem;
+    }
+
+    .featured-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
   }
 </style>

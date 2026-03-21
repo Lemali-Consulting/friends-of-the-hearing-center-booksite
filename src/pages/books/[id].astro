@@ -5,17 +5,19 @@ import { getTagIconSvg } from '../../utils/tag-icons';
 
 export async function getStaticPaths() {
   const books = await getCollection('books');
-  const coverEntries = await getCollection('covers');
-  const coverMap = new Map(coverEntries.map(c => [c.id, c.data]));
+  const metadataEntries = await getCollection('metadata');
+  const metadataMap = new Map(metadataEntries.map(c => [c.id, c.data]));
   return books.map(entry => {
-    const cover = coverMap.get(entry.id);
+    const meta = metadataMap.get(entry.id);
     return {
       params: { id: entry.id },
       props: {
         bookId: entry.id,
         book: {
           ...entry.data,
-          coverImage: entry.data.coverImage || cover?.coverUrl || null,
+          coverImage: entry.data.coverImage || meta?.coverUrl || null,
+          description: meta?.description || null,
+          purchaseLink: entry.data.purchaseLink || null,
         },
       },
     };
@@ -49,6 +51,8 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
       <h1 class="title">{book.title}</h1>
       {book.author && <p class="author">by {book.author}</p>}
       {book.illustrator && <p class="illustrator">Illustrated by {book.illustrator}</p>}
+
+      {book.description && <p class="description">{book.description}</p>}
 
       <dl class="fields">
         {book.bookType && (
@@ -120,6 +124,13 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           </>
         )}
       </dl>
+
+      {book.purchaseLink && (
+        <a class="purchase-link" href={book.purchaseLink} target="_blank" rel="noopener noreferrer">
+          Find this book
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3v10h10V9"/><path d="M9 1h6v6"/><path d="M15 1L7 9"/></svg>
+        </a>
+      )}
 
       {bookReviews.length > 0 && (
         <section class="reviews">
@@ -302,6 +313,13 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     font-style: italic;
   }
 
+  .description {
+    font-size: 0.95rem;
+    color: var(--color-ink-light);
+    line-height: 1.6;
+    margin: 0 0 2rem;
+  }
+
   .author + .fields {
     margin-top: 2rem;
   }
@@ -369,6 +387,33 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
   .tag-equip {
     background: var(--color-plum-soft);
     color: var(--color-plum);
+  }
+
+  /* Purchase link */
+  .purchase-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1.5rem;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: var(--font-body);
+    color: #fff;
+    background: var(--color-teal);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: background 0.15s, transform 0.15s;
+  }
+
+  .purchase-link:hover {
+    background: var(--color-teal-dark);
+    transform: translateY(-1px);
+  }
+
+  .purchase-link:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   /* Reviews */

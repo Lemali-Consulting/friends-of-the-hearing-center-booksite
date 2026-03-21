@@ -4,9 +4,10 @@ import { base } from '../utils/url.js';
 interface Props {
   title: string;
   showBackLink?: boolean;
+  isLanding?: boolean;
 }
 
-const { title, showBackLink = false } = Astro.props;
+const { title, showBackLink = false, isLanding = false } = Astro.props;
 ---
 
 <html lang="en">
@@ -37,25 +38,32 @@ const { title, showBackLink = false } = Astro.props;
       <nav aria-label="Site">
         <div class="header-inner">
           {showBackLink ? (
-            <a href={`${base}/`} class="back-link">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              All books
-            </a>
+            <div class="header-row">
+              <a href={`${base}/books`} class="back-link">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                All books
+              </a>
+            </div>
           ) : (
-            <div class="logo-row">
-              <img class="logo-img" src={`${base}/image.png`} alt="Hearing Center Book Catalogue logo" />
-              <div>
-                <h1><a href={`${base}/`}>Hearing Center Book Catalogue</a></h1>
-                <p class="subtitle">
-                  <span class="subtitle-icons" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3.5C5.5 2 7.5 1.5 9 3c1 1 1 2.5.5 4-.5 1.2-1.5 2-2 3-.5.8-.5 1.5-.5 2"/><path d="M10 2.5c.5-.3 1.2-.2 1.5.2s.5 1.5 0 2.5l-.5 1"/><circle cx="7" cy="12" r=".7" fill="currentColor" stroke="none"/></svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5a1 1 0 0 1 2 0V8"/><path d="M6 7V4.5a1 1 0 0 1 2 0V8"/><path d="M8 7V5a1 1 0 0 1 2 0v3.5c0 2-1.5 3.5-3.5 3.5S3 11 3 10"/></svg>
-                  </span>
-                  Books featuring Deaf, Hard of Hearing &amp; DeafBlind characters
-                </p>
+            <div class="header-row">
+              <div class="logo-row">
+                <img class="logo-img" src={`${base}/image.png`} alt="Hearing Center Book Catalogue logo" />
+                <div>
+                  <h1><a href={`${base}/`}>Hearing Center Book Catalogue</a></h1>
+                  <p class="subtitle">
+                    <span class="subtitle-icons" aria-hidden="true">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3.5C5.5 2 7.5 1.5 9 3c1 1 1 2.5.5 4-.5 1.2-1.5 2-2 3-.5.8-.5 1.5-.5 2"/><path d="M10 2.5c.5-.3 1.2-.2 1.5.2s.5 1.5 0 2.5l-.5 1"/><circle cx="7" cy="12" r=".7" fill="currentColor" stroke="none"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5a1 1 0 0 1 2 0V8"/><path d="M6 7V4.5a1 1 0 0 1 2 0V8"/><path d="M8 7V5a1 1 0 0 1 2 0v3.5c0 2-1.5 3.5-3.5 3.5S3 11 3 10"/></svg>
+                    </span>
+                    Books featuring Deaf, Hard of Hearing &amp; DeafBlind characters
+                  </p>
+                </div>
               </div>
+              {!isLanding && (
+                <a href={`${base}/books`} class="nav-link">Browse Catalog</a>
+              )}
             </div>
           )}
         </div>
@@ -67,7 +75,10 @@ const { title, showBackLink = false } = Astro.props;
         {
           const link = document.querySelector('.back-link');
           const qs = sessionStorage.getItem('catalogQuery');
-          if (link && qs) link.href = link.href.split('?')[0] + '?' + qs;
+          if (link && qs) {
+            const href = link.getAttribute('href').split('?')[0];
+            link.href = href + '?' + qs;
+          }
         }
       </script>
     )}
@@ -179,6 +190,36 @@ const { title, showBackLink = false } = Astro.props;
   .header-inner {
     max-width: 1200px;
     margin: 0 auto;
+  }
+
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-ink-muted);
+    text-decoration: none;
+    padding: 0.4rem 0.85rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .nav-link:hover {
+    background: var(--color-accent-soft);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .nav-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   .logo-row {

@@ -19,15 +19,17 @@ const books = defineCollection({
     mainCharacter: z.boolean(),
     libraryAvailable: z.boolean().nullable(),
     publicationYear: z.number().nullable(),
+    purchaseLink: z.string().nullable(),
   }),
 });
 
-const covers = defineCollection({
-  loader: file('src/content/covers.json'),
+const metadata = defineCollection({
+  loader: file('src/content/metadata.json'),
   schema: z.object({
     coverUrl: z.string().nullable(),
     isbn: z.string().nullable(),
     olid: z.string().nullable(),
+    description: z.string().nullable(),
   }),
 });
 
@@ -42,4 +44,4 @@ const reviews = defineCollection({
   }),
 });
 
-export const collections = { books, covers, reviews };
+export const collections = { books, metadata, reviews };

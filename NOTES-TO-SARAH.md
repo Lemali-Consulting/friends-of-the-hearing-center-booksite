@@ -185,7 +185,7 @@ title (e.g., year or author name) would fix this.
 
 The site automatically fetches book cover images and ISBNs from
 [Open Library](https://openlibrary.org/) and [Google Books](https://books.google.com/).
-Results are stored in `src/content/covers.json` and displayed on the catalog and
+Results are stored in `src/content/metadata.json` and displayed on the catalog and
 detail pages.
 
 ### Current coverage
@@ -216,8 +216,8 @@ If new books are added to the sheet, a developer can run:
 
 ```bash
 npm run fetch-books       # pull latest book data from the sheet
-npm run fetch-covers      # look up covers/ISBNs for any new books
+npm run fetch-metadata      # look up covers/ISBNs for any new books
 ```
 
 The cover fetcher is incremental — it only queries books that aren't already in
-`covers.json`, so re-runs are fast.
+`metadata.json`, so re-runs are fast.

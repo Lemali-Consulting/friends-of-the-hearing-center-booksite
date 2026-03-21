@@ -6,7 +6,7 @@
     "dev": "astro dev --host",
     "build": "node scripts/fetch-books.js && astro build",
     "fetch-books": "node scripts/fetch-books.js",
-    "fetch-covers": "node scripts/fetch-covers.js",
+    "fetch-metadata": "node scripts/fetch-metadata.js",
     "preview": "astro preview --host",
     "astro": "astro"
   },

@@ -1,11 +1,12 @@
 /**
- * Fetches book cover URLs and ISBNs from Open Library and Google Books
- * for each book in books.json. Writes results to src/content/covers.json.
+ * Fetches book metadata (cover URLs, ISBNs, descriptions) from Open Library
+ * and Google Books for each book in books.json. Writes results to
+ * src/content/metadata.json.
  *
- * Run via: npm run fetch-covers
+ * Run via: npm run fetch-metadata
  *
- * The script is incremental — it skips books that already have an entry in covers.json.
- * To re-fetch a specific book, delete its entry from covers.json and re-run.
+ * The script is incremental — it skips books that already have an entry in metadata.json.
+ * To re-fetch a specific book, delete its entry from metadata.json and re-run.
  *
  * Pass --google-backfill to only query Google Books for entries that Open Library missed.
  */
@@ -18,7 +19,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const BOOKS_PATH = join(__dirname, '../src/content/books.json');
-const COVERS_PATH = join(__dirname, '../src/content/covers.json');
+const METADATA_PATH = join(__dirname, '../src/content/metadata.json');
 
 const OPEN_LIBRARY_SEARCH = 'https://openlibrary.org/search.json';
 const COVER_BASE = 'https://covers.openlibrary.org/b/id';
@@ -45,7 +46,7 @@ async function searchOpenLibrary(title, author) {
   const params = new URLSearchParams({
     title,
     limit: '5',
-    fields: 'key,title,author_name,cover_i,isbn',
+    fields: 'key,title,author_name,cover_i,isbn,first_sentence',
   });
   if (author) params.set('author', author);
 
@@ -79,7 +80,9 @@ async function searchOpenLibrary(title, author) {
     isbn = best.isbn.find(i => i.length === 13) || best.isbn[0];
   }
 
-  return { coverUrl, isbn, olid: best.key || null };
+  const description = Array.isArray(best.first_sentence) ? best.first_sentence[0] || null : null;
+
+  return { coverUrl, isbn, olid: best.key || null, description };
 }
 
 // -- Google Books -------------------------------------------------------------
@@ -97,7 +100,7 @@ async function searchGoogleBooks(title, author) {
     q,
     maxResults: '5',
     printType: 'books',
-    fields: 'items(volumeInfo(title,authors,imageLinks,industryIdentifiers))',
+    fields: 'items(volumeInfo(title,authors,imageLinks,industryIdentifiers,description))',
   });
 
   const res = await fetch(`${GOOGLE_BOOKS_SEARCH}?${params}`, {
@@ -142,7 +145,9 @@ async function searchGoogleBooks(title, author) {
   const isbn10 = ids.find(id => id.type === 'ISBN_10');
   isbn = isbn13?.identifier || isbn10?.identifier || null;
 
-  return { coverUrl, isbn };
+  const description = best.description || null;
+
+  return { coverUrl, isbn, description };
 }
 
 // -- Cover URL validation -----------------------------------------------------
@@ -196,9 +201,9 @@ async function main() {
   const books = JSON.parse(readFileSync(BOOKS_PATH, 'utf-8'));
 
   let covers = {};
-  if (existsSync(COVERS_PATH)) {
-    covers = JSON.parse(readFileSync(COVERS_PATH, 'utf-8'));
-    console.log(`Loaded ${Object.keys(covers).length} existing entries from covers.json`);
+  if (existsSync(METADATA_PATH)) {
+    covers = JSON.parse(readFileSync(METADATA_PATH, 'utf-8'));
+    console.log(`Loaded ${Object.keys(covers).length} existing entries from metadata.json`);
   }
 
   // ── Phase 1: Open Library (skip if --google-backfill or --validate-only) ──
@@ -217,12 +222,12 @@ async function main() {
       try {
         const result = await searchOpenLibrary(book.title, book.author);
         if (result) {
-          covers[book.id] = { coverUrl: result.coverUrl, isbn: result.isbn, olid: result.olid };
+          covers[book.id] = { coverUrl: result.coverUrl, isbn: result.isbn, olid: result.olid, description: result.description || null };
           const status = result.coverUrl ? 'cover + ' : 'no cover, ';
           console.log(`${progress} ${book.title} -> ${status}isbn: ${result.isbn || 'none'}`);
           found++;
         } else {
-          covers[book.id] = { coverUrl: null, isbn: null, olid: null };
+          covers[book.id] = { coverUrl: null, isbn: null, olid: null, description: null };
           console.log(`${progress} ${book.title} -> not found`);
           missed++;
         }
@@ -232,7 +237,7 @@ async function main() {
       }
 
       if ((i + 1) % 50 === 0 || i === toFetch.length - 1) {
-        writeFileSync(COVERS_PATH, JSON.stringify(covers, null, 2));
+        writeFileSync(METADATA_PATH, JSON.stringify(covers, null, 2));
       }
       if (i < toFetch.length - 1) await sleep(REQUEST_DELAY);
     }
@@ -271,6 +276,7 @@ async function main() {
             coverUrl: result.coverUrl,
             isbn: result.isbn,
             olid: null,
+            description: result.description || null,
           };
           const status = result.coverUrl ? 'cover + ' : 'no cover, ';
           console.log(`${progress} ${book.title} -> ${status}isbn: ${result.isbn || 'none'}`);
@@ -285,7 +291,7 @@ async function main() {
       }
 
       if ((i + 1) % 50 === 0 || i === needsBackfill.length - 1) {
-        writeFileSync(COVERS_PATH, JSON.stringify(covers, null, 2));
+        writeFileSync(METADATA_PATH, JSON.stringify(covers, null, 2));
       }
       if (i < needsBackfill.length - 1) await sleep(REQUEST_DELAY);
     }
@@ -313,21 +319,85 @@ async function main() {
     }
 
     if ((i + 1) % 50 === 0 || i === toValidate.length - 1) {
-      writeFileSync(COVERS_PATH, JSON.stringify(covers, null, 2));
+      writeFileSync(METADATA_PATH, JSON.stringify(covers, null, 2));
     }
     if (i < toValidate.length - 1) await sleep(REQUEST_DELAY);
   }
 
   console.log(`\nValidation done — Valid: ${valid}, Removed: ${invalid}`);
 
+  // ── Phase 4: Fetch descriptions from Open Library Works API ────────────
+
+  const needsDescription = Object.entries(covers).filter(
+    ([, v]) => v.olid && !v.description
+  );
+
+  if (needsDescription.length === 0) {
+    console.log('\nNo entries need description backfill.');
+  } else {
+    console.log(`\n── Description backfill (Open Library Works API) ──`);
+    console.log(`${needsDescription.length} entries to look up\n`);
+
+    let descFound = 0, descMissed = 0, descErrors = 0;
+
+    for (let i = 0; i < needsDescription.length; i++) {
+      const [id, entry] = needsDescription[i];
+      const progress = `[${i + 1}/${needsDescription.length}]`;
+
+      try {
+        const olid = entry.olid.replace('/works/', '');
+        const res = await fetch(`https://openlibrary.org/works/${olid}.json`, {
+          headers: { 'User-Agent': USER_AGENT },
+        });
+
+        if (!res.ok) {
+          console.warn(`${progress} ${id} -> HTTP ${res.status}`);
+          descErrors++;
+        } else {
+          const work = await res.json();
+          let desc = null;
+          if (typeof work.description === 'string') {
+            desc = work.description;
+          } else if (work.description?.value) {
+            desc = work.description.value;
+          } else if (Array.isArray(work.first_sentence) && work.first_sentence.length > 0) {
+            desc = work.first_sentence[0];
+          } else if (work.first_sentence?.value) {
+            desc = work.first_sentence.value;
+          }
+
+          if (desc) {
+            covers[id] = { ...entry, description: desc };
+            console.log(`${progress} ${id} -> description found`);
+            descFound++;
+          } else {
+            console.log(`${progress} ${id} -> no description`);
+            descMissed++;
+          }
+        }
+      } catch (err) {
+        console.warn(`${progress} ${id} -> ERROR: ${err.message}`);
+        descErrors++;
+      }
+
+      if ((i + 1) % 50 === 0 || i === needsDescription.length - 1) {
+        writeFileSync(METADATA_PATH, JSON.stringify(covers, null, 2));
+      }
+      if (i < needsDescription.length - 1) await sleep(REQUEST_DELAY);
+    }
+
+    console.log(`\nDescriptions done — Found: ${descFound}, Missed: ${descMissed}, Errors: ${descErrors}`);
+  }
+
   // ── Summary ────────────────────────────────────────────────────────────
 
-  writeFileSync(COVERS_PATH, JSON.stringify(covers, null, 2));
+  writeFileSync(METADATA_PATH, JSON.stringify(covers, null, 2));
   const entries = Object.values(covers);
   const withCover = entries.filter(e => e.coverUrl);
   const withIsbn = entries.filter(e => e.isbn);
-  console.log(`\nTotal: ${entries.length} entries — ${withCover.length} covers, ${withIsbn.length} ISBNs`);
-  console.log(`Wrote to src/content/covers.json`);
+  const withDesc = entries.filter(e => e.description);
+  console.log(`\nTotal: ${entries.length} entries — ${withCover.length} covers, ${withIsbn.length} ISBNs, ${withDesc.length} descriptions`);
+  console.log(`Wrote to src/content/metadata.json`);
 }
 
 main();
