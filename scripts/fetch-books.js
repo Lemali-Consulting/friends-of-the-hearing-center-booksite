@@ -446,11 +446,26 @@ async function main() {
   const lines = csvText.split('\n').filter(l => l.trim());
   const headers = parseCSVLine(lines[0]);
 
+  // Load existing books.json to preserve fields not in the Google Sheet (e.g. purchaseLink)
+  let existingById = {};
+  if (existsSync(OUT_PATH)) {
+    try {
+      const existing = JSON.parse(readFileSync(OUT_PATH, 'utf-8'));
+      for (const book of existing) {
+        if (book.id) existingById[book.id] = book;
+      }
+    } catch { /* ignore parse errors */ }
+  }
+
   const books = lines
     .slice(1)
     .map(line => parseCSVLine(line))
     .map(values => transformRow(headers, values))
-    .filter(Boolean);
+    .filter(Boolean)
+    .map(book => ({
+      ...book,
+      purchaseLink: existingById[book.id]?.purchaseLink ?? null,
+    }));
 
   writeFileSync(OUT_PATH, JSON.stringify(books, null, 2));
   console.log(`Wrote ${books.length} books to src/content/books.json`);
