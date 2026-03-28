@@ -15,8 +15,14 @@ interface Book {
   representationTypes: string[];
   equipment: string[];
   mainCharacter: boolean;
-  libraryAvailable: boolean | null;
+  carnegieLibraryLink: string | null;
+  series: string | null;
+  seriesNumber: number | null;
+  tags: string[];
   publicationYear: number | null;
+  purchaseLink: string | null;
+  landingPage: boolean;
+  summary: string | null;
 }
 
 interface Props {
@@ -74,6 +80,7 @@ export default function BookCatalog({ books, base }: Props) {
   const [representation, setRepresentation] = useState(params.rep ?? '');
   const [equipmentFilter, setEquipmentFilter] = useState(params.equip ?? '');
   const [authorConn, setAuthorConn] = useState(params.author ?? '');
+  const [tagFilter, setTagFilter] = useState(params.tag ?? '');
   const [sortBy, setSortBy] = useState(params.sort ?? 'author');
   const [visible, setVisible] = useState(PAGE_SIZE);
 
@@ -94,9 +101,10 @@ export default function BookCatalog({ books, base }: Props) {
       if (exclude !== 'rep' && representation && !b.representationTypes.includes(representation)) return false;
       if (exclude !== 'equip' && equipmentFilter && !b.equipment.includes(equipmentFilter)) return false;
       if (exclude !== 'author' && authorConn && !b.authorConnection.includes(authorConn)) return false;
+      if (exclude !== 'tag' && tagFilter && !b.tags.includes(tagFilter)) return false;
       return true;
     });
-  }, [books, search, bookType, ageGroup, representation, equipmentFilter, authorConn]);
+  }, [books, search, bookType, ageGroup, representation, equipmentFilter, authorConn, tagFilter]);
 
   // Derive filter options dynamically — each dropdown only shows values compatible with the other active filters
   // Also compute counts: how many books match each option value
@@ -133,6 +141,10 @@ export default function BookCatalog({ books, base }: Props) {
   const authorConnections = useMemo(() => unique(authorBase.flatMap(b => b.authorConnection)), [authorBase]);
   const authorCounts = useMemo(() => countBy(authorBase, b => b.authorConnection), [authorBase]);
 
+  const tagBase = useMemo(() => baseFilter('tag'), [baseFilter]);
+  const tagsAvail = useMemo(() => unique(tagBase.flatMap(b => b.tags)), [tagBase]);
+  const tagCounts = useMemo(() => countBy(tagBase, b => b.tags), [tagBase]);
+
   // Auto-clear a filter if its selected value is no longer among the available options
   useEffect(() => {
     if (bookType && !bookTypes.includes(bookType)) setBookType('');
@@ -149,6 +161,9 @@ export default function BookCatalog({ books, base }: Props) {
   useEffect(() => {
     if (authorConn && !authorConnections.includes(authorConn)) setAuthorConn('');
   }, [authorConn, authorConnections]);
+  useEffect(() => {
+    if (tagFilter && !tagsAvail.includes(tagFilter)) setTagFilter('');
+  }, [tagFilter, tagsAvail]);
 
   // Sync filters to URL
   const syncUrl = useCallback(() => {
@@ -159,17 +174,18 @@ export default function BookCatalog({ books, base }: Props) {
     if (representation) p.set('rep', representation);
     if (equipmentFilter) p.set('equip', equipmentFilter);
     if (authorConn) p.set('author', authorConn);
+    if (tagFilter) p.set('tag', tagFilter);
     if (sortBy !== 'author') p.set('sort', sortBy);
     const qs = p.toString();
     const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
     window.history.replaceState(null, '', url);
     sessionStorage.setItem('catalogQuery', qs);
-  }, [search, bookType, ageGroup, representation, equipmentFilter, authorConn, sortBy]);
+  }, [search, bookType, ageGroup, representation, equipmentFilter, authorConn, tagFilter, sortBy]);
 
   useEffect(() => { syncUrl(); }, [syncUrl]);
 
   // Reset visible count when filters change
-  useEffect(() => { setVisible(PAGE_SIZE); }, [search, bookType, ageGroup, representation, equipmentFilter, authorConn]);
+  useEffect(() => { setVisible(PAGE_SIZE); }, [search, bookType, ageGroup, representation, equipmentFilter, authorConn, tagFilter]);
 
   // Filter
   const filtered = useMemo(() => {
@@ -181,9 +197,10 @@ export default function BookCatalog({ books, base }: Props) {
       if (representation && !b.representationTypes.includes(representation)) return false;
       if (equipmentFilter && !b.equipment.includes(equipmentFilter)) return false;
       if (authorConn && !b.authorConnection.includes(authorConn)) return false;
+      if (tagFilter && !b.tags.includes(tagFilter)) return false;
       return true;
     });
-  }, [books, search, bookType, ageGroup, representation, equipmentFilter, authorConn]);
+  }, [books, search, bookType, ageGroup, representation, equipmentFilter, authorConn, tagFilter]);
 
   // Sort — books with covers are shown first, then by the chosen sort order
   const sorted = useMemo(() => {
@@ -242,7 +259,7 @@ export default function BookCatalog({ books, base }: Props) {
     return () => observer.disconnect();
   }, [visible, hasMore]);
 
-  const hasActiveFilters = search || bookType || ageGroup || representation || equipmentFilter || authorConn;
+  const hasActiveFilters = search || bookType || ageGroup || representation || equipmentFilter || authorConn || tagFilter;
 
   function clearFilters() {
     setSearch('');
@@ -251,6 +268,7 @@ export default function BookCatalog({ books, base }: Props) {
     setRepresentation('');
     setEquipmentFilter('');
     setAuthorConn('');
+    setTagFilter('');
   }
 
   return (
@@ -288,6 +306,12 @@ export default function BookCatalog({ books, base }: Props) {
             <option value="">Any author</option>
             {authorConnections.map(s => <option key={s} value={s}>{s} ({authorCounts.get(s) ?? 0})</option>)}
           </select>
+          {tagsAvail.length > 0 && (
+            <select aria-label="Filter by topic" value={tagFilter} onChange={e => setTagFilter(e.target.value)}>
+              <option value="">All topics</option>
+              {tagsAvail.map(t => <option key={t} value={t}>{t} ({tagCounts.get(t) ?? 0})</option>)}
+            </select>
+          )}
           <select aria-label="Sort order" value={sortBy} onChange={e => setSortBy(e.target.value)}>
             <option value="author">Sort: Author A–Z</option>
             <option value="author-desc">Sort: Author Z–A</option>
@@ -341,6 +365,9 @@ export default function BookCatalog({ books, base }: Props) {
                     {getTagIconSvg(tag) && <span className="tag-icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: getTagIconSvg(tag) }} />}
                     {tag}
                   </span>
+                ))}
+                {book.tags.map(tag => (
+                  <span key={tag} className="tag tag-topic">{tag}</span>
                 ))}
                 {book.authorConnection.length > 0 && (
                   <span className="tag tag-author">{book.authorConnection.join(', ')} Author</span>

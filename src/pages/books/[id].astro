@@ -140,6 +140,19 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           </>
         )}
 
+        {book.tags.length > 0 && (
+          <>
+            <dt>Topics</dt>
+            <dd>
+              <div class="tags">
+                {book.tags.map((tag: string) => (
+                  <span class="tag tag-topic">{tag}</span>
+                ))}
+              </div>
+            </dd>
+          </>
+        )}
+
         {book.authorInfo && (
           <>
             <dt>Author connection</dt>
@@ -450,6 +463,11 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
     display: block;
     width: 14px;
     height: 14px;
+  }
+
+  .tag-topic {
+    background: var(--color-gold-soft);
+    color: var(--color-gold);
   }
 
   .tag-equip {

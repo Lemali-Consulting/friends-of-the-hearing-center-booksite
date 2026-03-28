@@ -9,23 +9,27 @@ const bookEntries = await getCollection('books');
 const metadataEntries = await getCollection('metadata');
 const metadataMap = new Map(metadataEntries.map(c => [c.id, c.data]));
 
-const bookMap = new Map(bookEntries.map(entry => {
+const bookMap = new Map(bookEntries.map(entry => [entry.id, entry]));
+
+function toFeatured(entry) {
   const meta = metadataMap.get(entry.id);
-  return [entry.id, {
+  return {
     id: entry.id,
     ...entry.data,
     coverImage: entry.data.coverImage || meta?.coverUrl || null,
-  }];
-}));
+  };
+}
 
-const featuredBooks = featuredBookIds
-  .map(id => bookMap.get(id))
-  .filter(Boolean);
+const landingPageBooks = bookEntries.filter(entry => entry.data.landingPage);
+
+const featuredBooks = landingPageBooks.length > 0
+  ? landingPageBooks.map(toFeatured)
+  : featuredBookIds.map(id => bookMap.get(id)).filter(Boolean).map(toFeatured);
 
 const totalBooks = bookEntries.length;
 ---
 
-<Layout title="Hearing Center Book Catalogue" isLanding>
+<Layout title="Hearing Center Book Catalog" isLanding>
   <section class="hero">
     <h2 class="hero-heading">Discover Stories That Reflect Every&nbsp;Child</h2>
     <p class="hero-text">
@@ -70,6 +74,9 @@ const totalBooks = bookEntries.length;
                   {getTagIconSvg(tag) && <span class="tag-icon" aria-hidden="true" set:html={getTagIconSvg(tag)} />}
                   {tag}
                 </span>
+              ))}
+              {book.tags.map((tag: string) => (
+                <span class="tag tag-topic">{tag}</span>
               ))}
             </div>
           </div>
@@ -329,6 +336,11 @@ const totalBooks = bookEntries.length;
     display: block;
     width: 12px;
     height: 12px;
+  }
+
+  .tag-topic {
+    background: var(--color-gold-soft);
+    color: var(--color-gold);
   }
 
   .tag-equip {
