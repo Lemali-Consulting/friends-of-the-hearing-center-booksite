@@ -71,6 +71,7 @@ The Google Sheet ID is hardcoded in `scripts/fetch-books.js`.
 - **CI/CD:** `.github/workflows/deploy.yml` builds and deploys to GitHub Pages
 - **Triggers:** push to `main`, nightly cron (2am UTC), or manual `workflow_dispatch`
 - **Base URL:** In CI (`GITHUB_ACTIONS` env var set), `base` is `/friends-of-the-hearing-center-booksite`. Locally it defaults to `/`.
+- **After significant changes:** commit and push to `main` to deploy. The push triggers the GitHub Actions workflow automatically.
 
 ## Architecture Notes
 
