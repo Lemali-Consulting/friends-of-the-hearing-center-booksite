@@ -2,11 +2,37 @@
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import { getTagIconSvg } from '../../utils/tag-icons';
+import { base } from '../../utils/url';
 
 export async function getStaticPaths() {
   const books = await getCollection('books');
   const metadataEntries = await getCollection('metadata');
   const metadataMap = new Map(metadataEntries.map(c => [c.id, c.data]));
+
+  // Build a map of series name -> sorted list of books in that series
+  const seriesMap = new Map<string, Array<{ id: string; title: string; seriesNumber: number | null; coverImage: string | null }>>();
+  for (const entry of books) {
+    const s = entry.data.series;
+    if (!s) continue;
+    if (!seriesMap.has(s)) seriesMap.set(s, []);
+    const meta = metadataMap.get(entry.id);
+    seriesMap.get(s)!.push({
+      id: entry.id,
+      title: entry.data.title,
+      seriesNumber: entry.data.seriesNumber,
+      coverImage: entry.data.coverImage || meta?.coverUrl || null,
+    });
+  }
+  // Sort each series: numbered books first (by number), then unnumbered (by title)
+  for (const list of seriesMap.values()) {
+    list.sort((a, b) => {
+      if (a.seriesNumber != null && b.seriesNumber != null) return a.seriesNumber - b.seriesNumber;
+      if (a.seriesNumber != null) return -1;
+      if (b.seriesNumber != null) return 1;
+      return a.title.localeCompare(b.title);
+    });
+  }
+
   return books.map(entry => {
     const meta = metadataMap.get(entry.id);
     return {
@@ -16,20 +42,19 @@ export async function getStaticPaths() {
         book: {
           ...entry.data,
           coverImage: entry.data.coverImage || meta?.coverUrl || null,
-          description: meta?.description || null,
-          purchaseLink: entry.data.purchaseLink || null,
         },
+        seriesBooks: entry.data.series ? seriesMap.get(entry.data.series)! : [],
       },
     };
   });
 }
 
-const { bookId, book } = Astro.props;
+const { bookId, book, seriesBooks } = Astro.props;
 const allReviews = await getCollection('reviews');
 const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
 ---
 
-<Layout title={`${book.title} — Hearing Center Book Catalogue`} showBackLink>
+<Layout title={`${book.title} — Hearing Center Book Catalog`} showBackLink>
   <div class="book">
     <div class="cover-col">
       {book.coverImage
@@ -52,7 +77,7 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
       {book.author && <p class="author">by {book.author}</p>}
       {book.illustrator && <p class="illustrator">Illustrated by {book.illustrator}</p>}
 
-      {book.description && <p class="description">{book.description}</p>}
+      {book.summary && <p class="description">{book.summary}</p>}
 
       <dl class="fields">
         {book.bookType && (
@@ -66,6 +91,13 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           <>
             <dt>Age range</dt>
             <dd>{book.ageRange}</dd>
+          </>
+        )}
+
+        {book.series && (
+          <>
+            <dt>Series</dt>
+            <dd>{book.series}{book.seriesNumber ? ` (#${book.seriesNumber})` : ''} &middot; <a href="#series" class="series-link">See all {seriesBooks.length} books</a></dd>
           </>
         )}
 
@@ -115,11 +147,11 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           </>
         )}
 
-        {book.libraryAvailable !== null && (
+        {book.carnegieLibraryLink && (
           <>
             <dt>Carnegie Library</dt>
-            <dd class={book.libraryAvailable ? 'available' : ''}>
-              {book.libraryAvailable ? '✓ Available' : 'Not listed'}
+            <dd class="available">
+              <a href={book.carnegieLibraryLink} target="_blank" rel="noopener noreferrer">✓ Available</a>
             </dd>
           </>
         )}
@@ -130,6 +162,42 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           Find this book
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3v10h10V9"/><path d="M9 1h6v6"/><path d="M15 1L7 9"/></svg>
         </a>
+      )}
+
+      {seriesBooks.length > 1 && (
+        <section class="series-section" id="series">
+          <h2>More in the <em>{book.series}</em> series</h2>
+          <ul class="series-list">
+            {seriesBooks.map((sb: { id: string; title: string; seriesNumber: number | null; coverImage: string | null }) => (
+              <li class:list={['series-item', { 'series-item--current': sb.id === bookId }]}>
+                {sb.id === bookId ? (
+                  <span class="series-card series-card--current" aria-current="true">
+                    {sb.coverImage
+                      ? <img class="series-cover" src={sb.coverImage} alt="" loading="lazy" />
+                      : <span class="series-cover-placeholder">{sb.title[0]}</span>
+                    }
+                    <span class="series-info">
+                      {sb.seriesNumber != null && <span class="series-number">#{sb.seriesNumber}</span>}
+                      <span class="series-title">{sb.title}</span>
+                      <span class="series-current-label">Current book</span>
+                    </span>
+                  </span>
+                ) : (
+                  <a class="series-card" href={`${base}/books/${sb.id}`}>
+                    {sb.coverImage
+                      ? <img class="series-cover" src={sb.coverImage} alt="" loading="lazy" />
+                      : <span class="series-cover-placeholder">{sb.title[0]}</span>
+                    }
+                    <span class="series-info">
+                      {sb.seriesNumber != null && <span class="series-number">#{sb.seriesNumber}</span>}
+                      <span class="series-title">{sb.title}</span>
+                    </span>
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {bookReviews.length > 0 && (
@@ -387,6 +455,126 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
   .tag-equip {
     background: var(--color-plum-soft);
     color: var(--color-plum);
+  }
+
+  /* Series inline link */
+  .series-link {
+    color: var(--color-teal);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .series-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Series section */
+  .series-section {
+    margin-top: 2.5rem;
+    border-top: 1.5px solid var(--color-border-light);
+    padding-top: 1.5rem;
+  }
+
+  .series-section h2 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    color: var(--color-ink);
+  }
+
+  .series-section h2 em {
+    font-style: italic;
+  }
+
+  .series-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .series-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+    background: var(--color-card);
+    text-decoration: none;
+    color: var(--color-ink);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  a.series-card:hover {
+    border-color: var(--color-teal);
+    box-shadow: 0 2px 8px rgba(26, 26, 46, 0.08);
+  }
+
+  a.series-card:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .series-card--current {
+    border-color: var(--color-teal);
+    background: var(--color-teal-soft);
+  }
+
+  .series-cover {
+    width: 40px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .series-cover-placeholder {
+    width: 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-ink-muted);
+    opacity: 0.35;
+    background: linear-gradient(145deg, var(--color-cream-dark), var(--color-cream));
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .series-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .series-number {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-teal);
+  }
+
+  .series-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .series-current-label {
+    font-size: 0.7rem;
+    color: var(--color-teal-dark);
+    font-weight: 500;
   }
 
   /* Purchase link */
