@@ -153,6 +153,19 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           </>
         )}
 
+        {book.languages.length > 0 && (
+          <>
+            <dt>Languages available</dt>
+            <dd>
+              <div class="tags">
+                {book.languages.map((lang: string) => (
+                  <span class="tag tag-lang">{lang}</span>
+                ))}
+              </div>
+            </dd>
+          </>
+        )}
+
         {book.authorInfo && (
           <>
             <dt>Author connection</dt>
@@ -473,6 +486,11 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
   .tag-equip {
     background: var(--color-plum-soft);
     color: var(--color-plum);
+  }
+
+  .tag-lang {
+    background: var(--color-rose-soft);
+    color: var(--color-rose);
   }
 
   /* Series inline link */

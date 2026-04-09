@@ -39,6 +39,7 @@ const COLUMN_MAP = {
   'Purchase Link':          'purchaseLink',
   'Landing Page?':          'landingPageRaw',
   'Summary':                'summary',
+  'Languages Available':    'languagesRaw',
 };
 
 // =============================================================================
@@ -133,6 +134,7 @@ function transformRow(headers, values) {
     purchaseLink:        urlOrNull(raw.purchaseLink),
     landingPage:         raw.landingPageRaw?.toUpperCase() === 'TRUE',
     summary:             raw.summary || null,
+    languages:           splitList(raw.languagesRaw),
   };
 }
 

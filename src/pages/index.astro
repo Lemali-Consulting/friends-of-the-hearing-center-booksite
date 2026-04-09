@@ -78,6 +78,12 @@ const totalBooks = bookEntries.length;
               {book.tags.map((tag: string) => (
                 <span class="tag tag-topic">{tag}</span>
               ))}
+              {book.authorConnection.length > 0 && (
+                <span class="tag tag-author">{book.authorConnection.join(', ')} Author</span>
+              )}
+              {book.languages.map((lang: string) => (
+                <span class="tag tag-lang">{lang}</span>
+              ))}
             </div>
           </div>
         </a>
@@ -346,6 +352,16 @@ const totalBooks = bookEntries.length;
   .tag-equip {
     background: var(--color-plum-soft);
     color: var(--color-plum);
+  }
+
+  .tag-author {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+
+  .tag-lang {
+    background: var(--color-rose-soft);
+    color: var(--color-rose);
   }
 
   /* Bottom CTA */

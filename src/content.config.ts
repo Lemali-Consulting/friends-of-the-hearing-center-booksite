@@ -25,6 +25,7 @@ const books = defineCollection({
     purchaseLink: z.string().url().nullable(),
     landingPage: z.boolean(),
     summary: z.string().min(1).nullable(),
+    languages: z.array(z.string().min(1)),
   }),
 });
 
