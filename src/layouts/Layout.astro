@@ -61,9 +61,12 @@ const { title, showBackLink = false, isLanding = false } = Astro.props;
                   </p>
                 </div>
               </div>
-              {!isLanding && (
-                <a href={`${base}/books`} class="nav-link">Browse Catalog</a>
-              )}
+              <div class="nav-links">
+                {!isLanding && (
+                  <a href={`${base}/books`} class="nav-link">Browse Catalog</a>
+                )}
+                <a href={`${base}/about`} class="nav-link">About</a>
+              </div>
             </div>
           )}
         </div>
@@ -201,6 +204,12 @@ const { title, showBackLink = false, isLanding = false } = Astro.props;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
   }
 
   .nav-link {

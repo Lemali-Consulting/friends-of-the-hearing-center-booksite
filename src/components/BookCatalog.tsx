@@ -6,11 +6,10 @@ interface Book {
   title: string;
   author: string | null;
   illustrator: string | null;
-  authorInfo: string | null;
   authorConnection: string[];
+  illustratorConnection: string[];
   coverImage: string | null;
   bookType: string | null;
-  ageRange: string | null;
   ageGroups: string[];
   representationTypes: string[];
   equipment: string[];
@@ -368,11 +367,14 @@ export default function BookCatalog({ books, base }: Props) {
               <h2 className="card-title">{book.title}</h2>
               <p className="card-author">{book.author}</p>
               <div className="card-meta">
-                {book.ageRange && <span>{book.ageRange}</span>}
-                {book.ageRange && book.bookType && <span className="dot">&middot;</span>}
+                {book.ageGroups.length > 0 && <span>{book.ageGroups.join(' / ')}</span>}
+                {book.ageGroups.length > 0 && book.bookType && <span className="dot">&middot;</span>}
                 {book.bookType && <span>{book.bookType}</span>}
               </div>
               <div className="card-tags">
+                {book.mainCharacter && (
+                  <span className="tag tag-main">★ Main Character</span>
+                )}
                 {book.representationTypes.map(tag => (
                   <span key={tag} className="tag">
                     {getTagIconSvg(tag) && <span className="tag-icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: getTagIconSvg(tag) }} />}
@@ -390,6 +392,9 @@ export default function BookCatalog({ books, base }: Props) {
                 ))}
                 {book.authorConnection.length > 0 && (
                   <span className="tag tag-author">{book.authorConnection.join(', ')} Author</span>
+                )}
+                {book.illustratorConnection.length > 0 && (
+                  <span className="tag tag-author">{book.illustratorConnection.join(', ')} Illustrator</span>
                 )}
                 {book.languages.map(lang => (
                   <span key={lang} className="tag tag-lang">{lang}</span>

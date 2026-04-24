@@ -1,0 +1,112 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="About — Hearing Center Book Catalog">
+  <article class="about">
+    <h1>About This Catalog</h1>
+
+    <p class="lede">
+      This catalog is a labor of love — a curated list of books featuring Deaf,
+      Hard of Hearing, and DeafBlind characters, built by volunteers affiliated
+      with the Friends of the Hearing Center at UPMC Children's Hospital of
+      Pittsburgh.
+    </p>
+
+    <section>
+      <h2>Our mission</h2>
+      <p>
+        Every child deserves to see themselves reflected in the stories they read.
+        We maintain this collection so that families, librarians, educators, and
+        young readers can easily find books that celebrate Deaf, Hard of Hearing,
+        and DeafBlind experiences.
+      </p>
+    </section>
+
+    <section>
+      <h2>The volunteers</h2>
+      <p>
+        This list has been researched, reviewed, and compiled by a dedicated
+        group of volunteers — parents, audiologists, educators, and members of
+        the Deaf and Hard of Hearing community.
+      </p>
+      <p class="placeholder">
+        <em>(Placeholder — send us the list of volunteers you'd like named here
+        and any photos or bios, and we'll add them.)</em>
+      </p>
+    </section>
+
+    <section>
+      <h2>Suggest a book or report an error</h2>
+      <p>
+        Know of a book we're missing? Spotted an error in an entry? We'd love to
+        hear from you.
+      </p>
+      <p class="placeholder">
+        <em>(Placeholder — send us the email address or submission form link
+        you'd like to use for book suggestions and corrections.)</em>
+      </p>
+    </section>
+
+    <section>
+      <h2>About Friends of the Hearing Center</h2>
+      <p>
+        Friends of the Hearing Center is a nonprofit supporting the UPMC
+        Children's Hospital of Pittsburgh Hearing Center and the families it
+        serves.
+      </p>
+    </section>
+  </article>
+</Layout>
+
+<style>
+  .about {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 1rem 0 3rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    margin: 0 0 1.25rem;
+    color: var(--color-ink);
+    line-height: 1.15;
+  }
+
+  .lede {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--color-ink-light);
+    margin: 0 0 2.25rem;
+  }
+
+  section {
+    margin-bottom: 2.25rem;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin: 0 0 0.65rem;
+  }
+
+  p {
+    font-size: 0.975rem;
+    line-height: 1.65;
+    color: var(--color-ink-light);
+    margin: 0 0 0.85rem;
+  }
+
+  .placeholder {
+    font-size: 0.9rem;
+    color: var(--color-ink-muted);
+    background: var(--color-accent-soft);
+    border-left: 3px solid var(--color-accent);
+    padding: 0.75rem 1rem;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+</style>

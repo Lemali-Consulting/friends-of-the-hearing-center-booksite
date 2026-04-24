@@ -87,10 +87,25 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           </>
         )}
 
-        {book.ageRange && (
+        {book.ageGroups.length > 0 && (
           <>
-            <dt>Age range</dt>
-            <dd>{book.ageRange}</dd>
+            <dt>Age group</dt>
+            <dd>
+              <div class="tags">
+                {book.ageGroups.map((ag: string) => (
+                  <a class="tag tag-age" href={`${base}/books?age=${encodeURIComponent(ag)}`}>{ag}</a>
+                ))}
+              </div>
+            </dd>
+          </>
+        )}
+
+        {book.mainCharacter && (
+          <>
+            <dt>Main character</dt>
+            <dd>
+              <span class="tag tag-main">★ Deaf/HoH/DeafBlind main character</span>
+            </dd>
           </>
         )}
 
@@ -114,10 +129,10 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
             <dd>
               <div class="tags">
                 {book.representationTypes.map((tag: string) => (
-                  <span class="tag">
+                  <a class="tag" href={`${base}/books?rep=${encodeURIComponent(tag)}`}>
                     {getTagIconSvg(tag) && <span class="tag-icon" aria-hidden="true" set:html={getTagIconSvg(tag)} />}
                     {tag}
-                  </span>
+                  </a>
                 ))}
               </div>
             </dd>
@@ -130,10 +145,10 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
             <dd>
               <div class="tags">
                 {book.equipment.map((tag: string) => (
-                  <span class="tag tag-equip">
+                  <a class="tag tag-equip" href={`${base}/books?equip=${encodeURIComponent(tag)}`}>
                     {getTagIconSvg(tag) && <span class="tag-icon" aria-hidden="true" set:html={getTagIconSvg(tag)} />}
                     {tag}
-                  </span>
+                  </a>
                 ))}
               </div>
             </dd>
@@ -146,7 +161,7 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
             <dd>
               <div class="tags">
                 {book.tags.map((tag: string) => (
-                  <span class="tag tag-topic">{tag}</span>
+                  <a class="tag tag-topic" href={`${base}/books?tag=${encodeURIComponent(tag)}`}>{tag}</a>
                 ))}
               </div>
             </dd>
@@ -159,17 +174,36 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
             <dd>
               <div class="tags">
                 {book.languages.map((lang: string) => (
-                  <span class="tag tag-lang">{lang}</span>
+                  <a class="tag tag-lang" href={`${base}/books?lang=${encodeURIComponent(lang)}`}>{lang}</a>
                 ))}
               </div>
             </dd>
           </>
         )}
 
-        {book.authorInfo && (
+        {book.authorConnection.length > 0 && (
           <>
             <dt>Author connection</dt>
-            <dd>{book.authorInfo}</dd>
+            <dd>
+              <div class="tags">
+                {book.authorConnection.map((c: string) => (
+                  <a class="tag tag-author" href={`${base}/books?author=${encodeURIComponent(c)}`}>{c}</a>
+                ))}
+              </div>
+            </dd>
+          </>
+        )}
+
+        {book.illustratorConnection.length > 0 && (
+          <>
+            <dt>Illustrator connection</dt>
+            <dd>
+              <div class="tags">
+                {book.illustratorConnection.map((c: string) => (
+                  <span class="tag tag-author">{c}</span>
+                ))}
+              </div>
+            </dd>
           </>
         )}
 
@@ -491,6 +525,37 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
   .tag-lang {
     background: var(--color-rose-soft);
     color: var(--color-rose);
+  }
+
+  .tag-author {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+
+  .tag-age {
+    background: var(--color-navy-soft);
+    color: var(--color-navy);
+  }
+
+  .tag-main {
+    background: var(--color-navy);
+    color: #fff;
+  }
+
+  a.tag {
+    text-decoration: none;
+    transition: filter 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+
+  a.tag:hover {
+    filter: brightness(0.94);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(26, 26, 46, 0.12);
+  }
+
+  a.tag:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   /* Series inline link */

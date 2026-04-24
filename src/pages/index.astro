@@ -58,11 +58,14 @@ const totalBooks = bookEntries.length;
             <h3 class="card-title">{book.title}</h3>
             <p class="card-author">{book.author}</p>
             <div class="card-meta">
-              {book.ageRange && <span>{book.ageRange}</span>}
-              {book.ageRange && book.bookType && <span class="dot">&middot;</span>}
+              {book.ageGroups.length > 0 && <span>{book.ageGroups.join(' / ')}</span>}
+              {book.ageGroups.length > 0 && book.bookType && <span class="dot">&middot;</span>}
               {book.bookType && <span>{book.bookType}</span>}
             </div>
             <div class="card-tags">
+              {book.mainCharacter && (
+                <span class="tag tag-main">★ Main Character</span>
+              )}
               {book.representationTypes.map((tag: string) => (
                 <span class="tag">
                   {getTagIconSvg(tag) && <span class="tag-icon" aria-hidden="true" set:html={getTagIconSvg(tag)} />}
@@ -80,6 +83,9 @@ const totalBooks = bookEntries.length;
               ))}
               {book.authorConnection.length > 0 && (
                 <span class="tag tag-author">{book.authorConnection.join(', ')} Author</span>
+              )}
+              {book.illustratorConnection.length > 0 && (
+                <span class="tag tag-author">{book.illustratorConnection.join(', ')} Illustrator</span>
               )}
               {book.languages.map((lang: string) => (
                 <span class="tag tag-lang">{lang}</span>
@@ -362,6 +368,11 @@ const totalBooks = bookEntries.length;
   .tag-lang {
     background: var(--color-rose-soft);
     color: var(--color-rose);
+  }
+
+  .tag-main {
+    background: var(--color-navy);
+    color: #fff;
   }
 
   /* Bottom CTA */
