@@ -57,6 +57,9 @@ const totalBooks = bookEntries.length;
           <div class="info">
             <h3 class="card-title">{book.title}</h3>
             <p class="card-author">{book.author}</p>
+            {book.illustrator && book.illustrator !== book.author && (
+              <p class="card-author">Illustrated by {book.illustrator}</p>
+            )}
             <div class="card-meta">
               {book.ageGroups.length > 0 && <span>{book.ageGroups.join(' / ')}</span>}
               {book.ageGroups.length > 0 && book.bookType && <span class="dot">&middot;</span>}

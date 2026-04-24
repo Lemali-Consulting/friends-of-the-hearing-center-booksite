@@ -366,6 +366,9 @@ export default function BookCatalog({ books, base }: Props) {
             <div className="info">
               <h2 className="card-title">{book.title}</h2>
               <p className="card-author">{book.author}</p>
+              {book.illustrator && book.illustrator !== book.author && (
+                <p className="card-author">Illustrated by {book.illustrator}</p>
+              )}
               <div className="card-meta">
                 {book.ageGroups.length > 0 && <span>{book.ageGroups.join(' / ')}</span>}
                 {book.ageGroups.length > 0 && book.bookType && <span className="dot">&middot;</span>}
