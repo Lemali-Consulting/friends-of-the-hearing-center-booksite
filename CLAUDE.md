@@ -10,7 +10,7 @@ A static website for a nonprofit affiliated with UPMC Children's Hospital Hearin
 - **UI integration:** React (via `@astrojs/react`)
 - **Language:** JavaScript (ES modules), with Astro components (`.astro`)
 - **Node version:** 22
-- **Hosting:** GitHub Pages (deployed via GitHub Actions)
+- **Hosting:** Netlify (https://hearing-center-book-catalogue.netlify.app)
 
 ## Getting Started
 
@@ -68,10 +68,9 @@ The Google Sheet ID is hardcoded in `scripts/fetch-books.js`.
 
 ## Deployment
 
-- **CI/CD:** `.github/workflows/deploy.yml` builds and deploys to GitHub Pages
-- **Triggers:** push to `main`, nightly cron (2am UTC), or manual `workflow_dispatch`
-- **Base URL:** In CI (`GITHUB_ACTIONS` env var set), `base` is `/friends-of-the-hearing-center-booksite`. Locally it defaults to `/`.
-- **After significant changes:** commit and push to `main` to deploy. The push triggers the GitHub Actions workflow automatically.
+- **Host:** Netlify. Build config lives in `netlify.toml` — Netlify runs `npm run build` (which re-fetches the sheet before building) on every push to `main`.
+- **Nightly refresh:** `.github/workflows/deploy.yml` is a thin GitHub Action that pings a Netlify build hook on a 2am UTC cron, so the site rebuilds nightly and picks up sheet edits without anyone having to push. The hook URL is stored as repo secret `NETLIFY_BUILD_HOOK`.
+- **Manual rebuild:** Trigger "Deploys → Trigger deploy" in the Netlify dashboard, or run the GitHub Action manually via `workflow_dispatch`.
 
 ## Architecture Notes
 
