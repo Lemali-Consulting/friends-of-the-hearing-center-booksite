@@ -54,7 +54,7 @@ const allReviews = await getCollection('reviews');
 const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
 ---
 
-<Layout title={`${book.title} — Hearing Center Book Catalog`} showBackLink>
+<Layout title={`${book.title} — D/HH/DB Book Catalog`} showBackLink>
   <div class="book">
     <div class="cover-col">
       {book.coverImage
