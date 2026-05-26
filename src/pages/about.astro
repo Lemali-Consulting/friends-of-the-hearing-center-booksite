@@ -4,56 +4,72 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="About — D/HH/DB Book Catalog">
   <article class="about">
-    <h1>About This Catalog</h1>
+    <h1>About this Catalog</h1>
 
     <p class="lede">
-      This catalog is a labor of love — a curated list of books featuring Deaf,
-      Hard of Hearing, and DeafBlind characters, built by volunteers affiliated
-      with the Friends of the Hearing Center at UPMC Children's Hospital of
+      This catalog is a labor of love, a curated list of books featuring Deaf,
+      Hard of Hearing, and DeafBlind characters, built by volunteers who connected
+      through the Friends of the Hearing Center at UPMC Children's Hospital of
       Pittsburgh.
     </p>
 
     <section>
-      <h2>Our mission</h2>
+      <h2>Our Mission</h2>
       <p>
-        Every child deserves to see themselves reflected in the stories they read.
-        We maintain this collection so that families, librarians, educators, and
-        young readers can easily find books that celebrate Deaf, Hard of Hearing,
-        and DeafBlind experiences.
+        We believe representation matters. Many children who are Deaf, Hard of
+        Hearing, or DeafBlind have never opened a book and found a character who
+        shares their experiences. Every child deserves to see themselves reflected
+        in the stories they read. We created this resource so that families,
+        librarians, educators, and young readers can easily find books that include
+        Deaf, Hard of Hearing, and DeafBlind experiences similar to their own.
       </p>
     </section>
 
     <section>
-      <h2>The volunteers</h2>
+      <h2>The Volunteers</h2>
       <p>
-        This list has been researched, reviewed, and compiled by a dedicated
-        group of volunteers — parents, audiologists, educators, and members of
-        the Deaf and Hard of Hearing community.
+        This list has been researched, reviewed, and compiled entirely by a group
+        of volunteers. The contents of each book have not been individually reviewed
+        and do not necessarily represent the viewpoints of the volunteers or of any
+        individuals associated with the Friends of the Hearing Center.
       </p>
-      <p class="placeholder">
-        <em>(Placeholder — send us the list of volunteers you'd like named here
-        and any photos or bios, and we'll add them.)</em>
+      <div class="volunteer">
+        <p class="volunteer-name">Sarah Grimm</p>
+        <p>
+          By day, she works as a Teacher of the Deaf and Hard of Hearing in
+          preschool early intervention (who also holds certifications in
+          Deafblindness and Reading) so it's safe to say books and language are
+          kind of her thing. She also serves as Chair of the Friends of the
+          Hearing Center at UPMC Children's Hospital of Pittsburgh, which is how
+          this whole project got started. Her favorite section of this catalog is
+          picture books, and she's been known to spend an absurd amount of time at
+          local bookshops flipping through shelves looking for new additions. When
+          she's not hunting for the next great read, you'll probably find her deep
+          in a fantasy novel (ideally one with cute dragons and plenty of witty
+          banter).
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Suggest a Book or Correction</h2>
+      <p>
+        Since this catalog was entirely volunteer created, it may not be perfect
+        or complete. Know of a book we're missing? Spotted an error in an entry?
+        We'd love to hear from you. Contact us at <a href="mailto:TheHearingCenter.CHP@gmail.com">TheHearingCenter.CHP@gmail.com</a>.
       </p>
     </section>
 
     <section>
-      <h2>Suggest a book or report an error</h2>
+      <h2>Usage &amp; Copyright</h2>
       <p>
-        Know of a book we're missing? Spotted an error in an entry? We'd love to
-        hear from you.
-      </p>
-      <p class="placeholder">
-        <em>(Placeholder — send us the email address or submission form link
-        you'd like to use for book suggestions and corrections.)</em>
-      </p>
-    </section>
-
-    <section>
-      <h2>About Friends of the Hearing Center</h2>
-      <p>
-        Friends of the Hearing Center is a nonprofit supporting the UPMC
-        Children's Hospital of Pittsburgh Hearing Center and the families it
-        serves.
+        This catalog is provided free for personal use only. It may not be copied,
+        reproduced, or republished as your own original work. Reproducing or
+        republishing any part of this catalog online without permission infringes
+        our copyright under applicable law. Linking to this site is welcome and
+        encouraged. To request permission for any other use, please contact us at
+        <a href="mailto:TheHearingCenter.CHP@gmail.com">TheHearingCenter.CHP@gmail.com</a>.
+        All rights reserved. &copy; 2026
       </p>
     </section>
   </article>
@@ -101,12 +117,21 @@ import Layout from '../layouts/Layout.astro';
     margin: 0 0 0.85rem;
   }
 
-  .placeholder {
-    font-size: 0.9rem;
-    color: var(--color-ink-muted);
-    background: var(--color-accent-soft);
+  .volunteer {
     border-left: 3px solid var(--color-accent);
-    padding: 0.75rem 1rem;
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding-left: 1rem;
+    margin-top: 1rem;
+  }
+
+  .volunteer-name {
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 0.35rem;
+  }
+
+  a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 </style>
