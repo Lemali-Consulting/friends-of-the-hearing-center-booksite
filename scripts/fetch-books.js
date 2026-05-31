@@ -35,7 +35,7 @@ const COLUMN_MAP = {
   'Representation':         'representationRaw',
   'Equipment':              'equipmentRaw',
   'Main Character?':        'mainCharacterRaw',
-  'Carnegie Library Link':  'carnegieLibraryLink',
+  'Carnegie Library':       'carnegieLibraryAvailable',
   'Series':                 'series',
   'Series Number':          'seriesNumber',
   'Tags':                   'tagsRaw',
@@ -48,7 +48,7 @@ const COLUMN_MAP = {
 
 // Columns where the sheet cell often contains linked display text rather than a
 // raw URL. For these we prefer the cell's attached hyperlink over its text.
-const LINK_FIELDS = new Set(['coverImage', 'carnegieLibraryLink', 'purchaseLink']);
+const LINK_FIELDS = new Set(['coverImage', 'purchaseLink']);
 
 // =============================================================================
 // xlsx parsing (minimal — just what we need)
@@ -234,8 +234,8 @@ function transformRow(headerColMap, rowCells) {
     ageGroups:               splitList(raw.ageGroupsRaw),
     representationTypes: splitList(raw.representationRaw),
     equipment:           splitList(raw.equipmentRaw),
-    mainCharacter:       raw.mainCharacterRaw?.toUpperCase() === 'TRUE',
-    carnegieLibraryLink: raw.carnegieLibraryLink || null,
+    mainCharacter:           raw.mainCharacterRaw?.toUpperCase() === 'TRUE',
+    carnegieLibraryAvailable: raw.carnegieLibraryAvailable?.toUpperCase() === 'TRUE',
     series:              raw.series || null,
     seriesNumber:        raw.seriesNumber ? parseInt(raw.seriesNumber, 10) || null : null,
     tags:                normalizeTags(splitList(raw.tagsRaw)),

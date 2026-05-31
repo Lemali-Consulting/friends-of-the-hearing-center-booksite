@@ -207,12 +207,10 @@ const bookReviews = allReviews.filter(r => r.data.bookId === bookId);
           </>
         )}
 
-        {book.carnegieLibraryLink && (
+        {book.carnegieLibraryAvailable && (
           <>
             <dt>Carnegie Library</dt>
-            <dd class="available">
-              <a href={book.carnegieLibraryLink} target="_blank" rel="noopener noreferrer">✓ Available</a>
-            </dd>
+            <dd class="available">✔️ Available at Carnegie Library of Pittsburgh</dd>
           </>
         )}
       </dl>

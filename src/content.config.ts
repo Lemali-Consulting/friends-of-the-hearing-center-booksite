@@ -16,7 +16,7 @@ const books = defineCollection({
     representationTypes: z.array(z.string().min(1)),
     equipment: z.array(z.string().min(1)),
     mainCharacter: z.boolean(),
-    carnegieLibraryLink: z.string().url().nullable(),
+    carnegieLibraryAvailable: z.boolean(),
     series: z.string().min(1).nullable(),
     seriesNumber: z.number().int().positive().nullable(),
     tags: z.array(z.string().min(1)),
