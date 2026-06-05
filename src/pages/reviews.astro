@@ -1,0 +1,238 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import { base } from '../utils/url.js';
+
+const reviewerEntries = await getCollection('reviewers');
+const reviewers = reviewerEntries
+  .map(entry => entry.data)
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+// Books that have collected reviews, so visitors can jump straight to them.
+const reviewEntries = await getCollection('reviews');
+const bookEntries = await getCollection('books');
+const bookTitleById = new Map(bookEntries.map(b => [b.id, b.data.title]));
+
+const reviewedBookIds = [...new Set(reviewEntries.map(r => r.data.bookId))]
+  .filter(id => bookTitleById.has(id))
+  .map(id => ({ id, title: bookTitleById.get(id)! }))
+  .sort((a, b) => a.title.localeCompare(b.title));
+---
+
+<Layout title="Reviews — D/HH/DB Book Catalog">
+  <article class="reviews-page">
+    <h1>Reviews</h1>
+    <p class="lede">
+      Hear directly from Deaf, Hard of Hearing, and DeafBlind readers. We
+      highlight creators reviewing books in the community, and share reviews
+      collected from our own readers.
+    </p>
+
+    <section class="featured-reviewers">
+      <h2>Featured Deaf Reviewers</h2>
+      <p class="section-intro">
+        These creators review books featuring D/HH/DB characters. Follow them for
+        thoughtful takes from lived experience.
+      </p>
+
+      {reviewers.length > 0 ? (
+        <ul class="reviewer-grid">
+          {reviewers.map(r => (
+            <li class="reviewer-card">
+              {r.photo
+                ? <img class="reviewer-avatar" src={r.photo} alt={r.name} loading="lazy" />
+                : <span class="reviewer-avatar reviewer-avatar--placeholder" aria-hidden="true">{r.name[0]}</span>
+              }
+              <div class="reviewer-body">
+                <h3 class="reviewer-name">{r.name}</h3>
+                {r.blurb && <p class="reviewer-blurb">{r.blurb}</p>}
+                <a class="reviewer-link" href={r.profileUrl} target="_blank" rel="noopener noreferrer">
+                  Read their reviews
+                  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H3v10h10V9"/><path d="M9 1h6v6"/><path d="M15 1L7 9"/></svg>
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="empty">Featured reviewers are coming soon.</p>
+      )}
+    </section>
+
+    {reviewedBookIds.length > 0 && (
+      <section class="reviewed-books">
+        <h2>Books with reader reviews</h2>
+        <p class="section-intro">
+          Readers have shared their thoughts on these titles. Open a book to read them.
+        </p>
+        <ul class="book-link-list">
+          {reviewedBookIds.map(b => (
+            <li>
+              <a href={`${base}/books/${b.id}`}>{b.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </article>
+</Layout>
+
+<style>
+  .reviews-page {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-ink);
+    margin: 0 0 0.75rem;
+    font-optical-sizing: auto;
+  }
+
+  .lede {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--color-ink-light);
+    margin: 0 0 2.5rem;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin: 0 0 0.4rem;
+  }
+
+  .section-intro {
+    font-size: 0.95rem;
+    color: var(--color-ink-muted);
+    margin: 0 0 1.25rem;
+    line-height: 1.55;
+  }
+
+  .featured-reviewers {
+    margin-bottom: 3rem;
+  }
+
+  .reviewer-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .reviewer-card {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: var(--color-card);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .reviewer-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--color-border-light);
+  }
+
+  .reviewer-avatar--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-plum);
+    background: var(--color-plum-soft);
+    border-color: var(--color-plum-soft);
+  }
+
+  .reviewer-body {
+    min-width: 0;
+  }
+
+  .reviewer-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin: 0 0 0.3rem;
+  }
+
+  .reviewer-blurb {
+    font-size: 0.875rem;
+    color: var(--color-ink-light);
+    line-height: 1.5;
+    margin: 0 0 0.75rem;
+  }
+
+  .reviewer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-plum);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .reviewer-link:hover {
+    color: var(--color-ink);
+    text-decoration: underline;
+  }
+
+  .reviewer-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .empty {
+    font-size: 0.95rem;
+    color: var(--color-ink-muted);
+    font-style: italic;
+  }
+
+  .book-link-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .book-link-list a {
+    display: inline-block;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-teal);
+    background: var(--color-teal-soft);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: filter 0.15s, transform 0.15s;
+  }
+
+  .book-link-list a:hover {
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+  }
+
+  .book-link-list a:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+</style>

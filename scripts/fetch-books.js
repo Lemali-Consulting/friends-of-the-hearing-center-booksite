@@ -18,11 +18,17 @@ import { unzipSync, strFromU8 } from 'fflate';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const SHEET_ID = '1lPzHX8GG2PWSnI_qCh6DLQ1leWxEwZykEX8Jk58jNIs';
-const GID = '0';
-const XLSX_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx&gid=${GID}`;
-const OUT_PATH = join(__dirname, '../src/content/books.json');
+const XLSX_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
+const BOOKS_OUT_PATH = join(__dirname, '../src/content/books.json');
+const REVIEWS_OUT_PATH = join(__dirname, '../src/content/reviews.json');
+const REVIEWERS_OUT_PATH = join(__dirname, '../src/content/reviewers.json');
 
-// Map exact sheet column headers to internal field names
+// Names of the optional extra tabs (matched case-insensitively). The books tab
+// is always the first worksheet, so it is not named here.
+const REVIEWS_SHEET_NAME = 'Reviews';
+const REVIEWERS_SHEET_NAME = 'Featured Reviewers';
+
+// Map exact sheet column headers to internal field names (Books tab)
 const COLUMN_MAP = {
   'Title':                   'title',
   'Author':                  'author',
@@ -41,14 +47,34 @@ const COLUMN_MAP = {
   'Tags':                   'tagsRaw',
   'Published In':           'yearRaw',
   'Purchase Link':          'purchaseLink',
+  'Review Link':            'reviewLink',
   'Landing Page?':          'landingPageRaw',
   'Summary':                'summary',
   'Languages Available':    'languagesRaw',
 };
 
+// Column map for the optional "Reviews" tab — paragraph reviews collected from
+// the volunteer Google Form.
+const REVIEWS_COLUMN_MAP = {
+  'Book Title':    'bookTitle',
+  'Reviewer':      'reviewer',
+  'Stars':         'starsRaw',
+  'Review Text':   'text',
+  'Photo Link':    'photo',
+};
+
+// Column map for the optional "Featured Reviewers" tab — Deaf creators whose
+// review feeds (e.g. GoodReads) we link out to.
+const REVIEWERS_COLUMN_MAP = {
+  'Name':          'name',
+  'Profile Link':  'profileUrl',
+  'Blurb':         'blurb',
+  'Photo Link':    'photo',
+};
+
 // Columns where the sheet cell often contains linked display text rather than a
 // raw URL. For these we prefer the cell's attached hyperlink over its text.
-const LINK_FIELDS = new Set(['coverImage', 'purchaseLink']);
+const LINK_FIELDS = new Set(['coverImage', 'purchaseLink', 'reviewLink', 'photo', 'profileUrl']);
 
 // =============================================================================
 // xlsx parsing (minimal — just what we need)
@@ -85,6 +111,28 @@ function parseRels(xml) {
     map[m[1]] = decodeXml(m[2]);
   }
   return map;
+}
+
+/**
+ * Parse xl/workbook.xml + its rels into an ordered list of worksheets:
+ *   [{ name, file }]  where `file` is e.g. "worksheets/sheet1.xml".
+ * Lets us look tabs up by their human-facing name instead of guessing gids.
+ */
+function parseWorkbook(workbookXml, workbookRelsXml) {
+  const rels = {};
+  for (const m of workbookRelsXml.matchAll(/<Relationship\b[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g)) {
+    rels[m[1]] = decodeXml(m[2]).replace(/^\/?xl\//, '');
+  }
+  const sheets = [];
+  for (const m of workbookXml.matchAll(/<sheet\b([^>]*)\/>/g)) {
+    const attrs = m[1];
+    const nameMatch = attrs.match(/\bname="([^"]+)"/);
+    const idMatch = attrs.match(/r:id="([^"]+)"/);
+    if (!nameMatch || !idMatch) continue;
+    const file = rels[idMatch[1]];
+    if (file) sheets.push({ name: decodeXml(nameMatch[1]), file });
+  }
+  return sheets;
 }
 
 /** Split a cell ref like "F42" into { col: "F", row: 42 }. */
@@ -203,24 +251,38 @@ function resolveLink(cell) {
 }
 
 // =============================================================================
-// Row -> book object
+// Row -> object transforms
 // =============================================================================
 
-function transformRow(headerColMap, rowCells) {
-  const raw = {};
-  for (const [col, field] of Object.entries(headerColMap)) {
-    const cell = rowCells[col];
-    if (LINK_FIELDS.has(field)) {
-      raw[field] = resolveLink(cell);
-    } else {
-      raw[field] = (cell?.value ?? '').trim();
-    }
+/**
+ * Turn a parsed sheet (row-indexed cell map) into an array of raw field objects,
+ * using row 1 as the header. LINK_FIELDS resolve to a URL (hyperlink preferred);
+ * every other field is trimmed text.
+ */
+function rowsToRaw(rows, columnMap) {
+  const headerRow = rows[1] ?? {};
+  const headerColMap = {};
+  for (const [col, cell] of Object.entries(headerRow)) {
+    const field = columnMap[cell.value?.trim()];
+    if (field) headerColMap[col] = field;
   }
 
+  const rowNums = Object.keys(rows).map(Number).filter(n => n > 1).sort((a, b) => a - b);
+  return rowNums.map(n => {
+    const rowCells = rows[n];
+    const raw = {};
+    for (const [col, field] of Object.entries(headerColMap)) {
+      const cell = rowCells[col];
+      raw[field] = LINK_FIELDS.has(field) ? resolveLink(cell) : (cell?.value ?? '').trim();
+    }
+    return raw;
+  });
+}
+
+function transformBook(raw) {
   if (!raw.title) return null;
 
-  const coverRaw = raw.coverImage;
-  const coverImage = coverRaw ? rewriteDriveUrl(coverRaw) : null;
+  const coverImage = raw.coverImage ? rewriteDriveUrl(raw.coverImage) : null;
 
   return {
     id:                  slugify(raw.title),
@@ -241,15 +303,67 @@ function transformRow(headerColMap, rowCells) {
     tags:                normalizeTags(splitList(raw.tagsRaw)),
     publicationYear:     raw.yearRaw ? parseInt(raw.yearRaw, 10) || null : null,
     purchaseLink:        raw.purchaseLink || null,
+    reviewLink:          raw.reviewLink || null,
     landingPage:         raw.landingPageRaw?.toUpperCase() === 'TRUE',
     summary:             raw.summary || null,
     languages:           splitList(raw.languagesRaw),
   };
 }
 
+/** Parse a stars cell into an integer 1–5, or null if blank/invalid. */
+function parseStars(raw) {
+  if (!raw) return null;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(5, Math.max(1, n));
+}
+
+/**
+ * A review row -> review object. `idCounts` tracks how many reviews we've seen
+ * per book so each review gets a stable unique id (e.g. "el-deafo-1").
+ */
+function transformReview(raw, idCounts) {
+  if (!raw.bookTitle || !raw.text) return null;
+  const bookId = slugify(raw.bookTitle);
+  const n = (idCounts[bookId] = (idCounts[bookId] || 0) + 1);
+  return {
+    id:       `${bookId}-${n}`,
+    bookId,
+    reviewer: raw.reviewer || 'Anonymous',
+    stars:    parseStars(raw.starsRaw),
+    text:     raw.text,
+    photo:    raw.photo ? rewriteDriveUrl(raw.photo) : null,
+  };
+}
+
+function transformReviewer(raw) {
+  if (!raw.name || !raw.profileUrl) return null;
+  return {
+    id:         slugify(raw.name),
+    name:       raw.name,
+    profileUrl: raw.profileUrl,
+    blurb:      raw.blurb || null,
+    photo:      raw.photo ? rewriteDriveUrl(raw.photo) : null,
+  };
+}
+
 // =============================================================================
 // Main
 // =============================================================================
+
+/**
+ * Load + parse a single worksheet by its zip-relative path (e.g.
+ * "worksheets/sheet1.xml"). Returns the row-indexed cell map, or null if the
+ * sheet isn't present in the archive.
+ */
+function loadSheet(xlsxBuf, sharedStrings, file) {
+  const sheetPath = `xl/${file}`;
+  const relsPath = `xl/worksheets/_rels/${file.split('/').pop()}.rels`;
+  const parts = unzipSync(xlsxBuf, { filter: f => f.name === sheetPath || f.name === relsPath });
+  if (!parts[sheetPath]) return null;
+  const rels = parts[relsPath] ? parseRels(strFromU8(parts[relsPath])) : {};
+  return parseSheet(strFromU8(parts[sheetPath]), sharedStrings, rels);
+}
 
 async function main() {
   console.log('Fetching book data from Google Sheets (xlsx)...');
@@ -261,46 +375,66 @@ async function main() {
     xlsxBuf = new Uint8Array(await res.arrayBuffer());
   } catch (err) {
     console.warn(`Warning: Fetch failed: ${err.message}`);
-    if (existsSync(OUT_PATH)) {
-      console.warn('  Using existing books.json as fallback.');
+    if (existsSync(BOOKS_OUT_PATH)) {
+      console.warn('  Using existing content JSON as fallback.');
       return;
     }
     console.error('  No fallback available. Exiting.');
     process.exit(1);
   }
 
-  const files = unzipSync(xlsxBuf, {
+  // Shared strings + workbook tab list (one unzip pass).
+  const meta = unzipSync(xlsxBuf, {
     filter: f => f.name === 'xl/sharedStrings.xml'
-              || f.name === 'xl/worksheets/sheet1.xml'
-              || f.name === 'xl/worksheets/_rels/sheet1.xml.rels',
+              || f.name === 'xl/workbook.xml'
+              || f.name === 'xl/_rels/workbook.xml.rels',
   });
-
-  const sharedStrings = files['xl/sharedStrings.xml']
-    ? parseSharedStrings(strFromU8(files['xl/sharedStrings.xml']))
+  const sharedStrings = meta['xl/sharedStrings.xml']
+    ? parseSharedStrings(strFromU8(meta['xl/sharedStrings.xml']))
     : [];
-  const rels = files['xl/worksheets/_rels/sheet1.xml.rels']
-    ? parseRels(strFromU8(files['xl/worksheets/_rels/sheet1.xml.rels']))
-    : {};
-  const sheetXml = strFromU8(files['xl/worksheets/sheet1.xml']);
-  const rows = parseSheet(sheetXml, sharedStrings, rels);
+  const sheets = (meta['xl/workbook.xml'] && meta['xl/_rels/workbook.xml.rels'])
+    ? parseWorkbook(strFromU8(meta['xl/workbook.xml']), strFromU8(meta['xl/_rels/workbook.xml.rels']))
+    : [];
 
-  // Build header column → field map from row 1.
-  const headerRow = rows[1] ?? {};
-  const headerColMap = {};
-  for (const [col, cell] of Object.entries(headerRow)) {
-    const field = COLUMN_MAP[cell.value?.trim()];
-    if (field) headerColMap[col] = field;
+  const findSheet = name =>
+    sheets.find(s => s.name.trim().toLowerCase() === name.toLowerCase());
+
+  // --- Books: always the first worksheet -----------------------------------
+  const booksFile = sheets[0]?.file || 'worksheets/sheet1.xml';
+  const booksRows = loadSheet(xlsxBuf, sharedStrings, booksFile);
+  if (!booksRows) {
+    console.error('  Could not read the books worksheet. Exiting.');
+    process.exit(1);
+  }
+  const books = rowsToRaw(booksRows, COLUMN_MAP).map(transformBook).filter(Boolean);
+  const withCover = books.filter(b => b.coverImage).length;
+  writeFileSync(BOOKS_OUT_PATH, JSON.stringify(books, null, 2));
+  console.log(`Wrote ${books.length} books to src/content/books.json (${withCover} with cover images)`);
+
+  // --- Reviews: optional "Reviews" tab -------------------------------------
+  const reviewsSheet = findSheet(REVIEWS_SHEET_NAME);
+  if (reviewsSheet) {
+    const rows = loadSheet(xlsxBuf, sharedStrings, reviewsSheet.file);
+    const idCounts = {};
+    const reviews = rowsToRaw(rows, REVIEWS_COLUMN_MAP)
+      .map(raw => transformReview(raw, idCounts))
+      .filter(Boolean);
+    writeFileSync(REVIEWS_OUT_PATH, JSON.stringify(reviews, null, 2));
+    console.log(`Wrote ${reviews.length} reviews to src/content/reviews.json`);
+  } else {
+    console.log(`No "${REVIEWS_SHEET_NAME}" tab found — leaving reviews.json untouched.`);
   }
 
-  const rowNums = Object.keys(rows).map(Number).filter(n => n > 1).sort((a, b) => a - b);
-  const books = rowNums
-    .map(n => transformRow(headerColMap, rows[n]))
-    .filter(Boolean);
-
-  const withCover = books.filter(b => b.coverImage).length;
-
-  writeFileSync(OUT_PATH, JSON.stringify(books, null, 2));
-  console.log(`Wrote ${books.length} books to src/content/books.json (${withCover} with cover images)`);
+  // --- Featured reviewers: optional "Featured Reviewers" tab ----------------
+  const reviewersSheet = findSheet(REVIEWERS_SHEET_NAME);
+  if (reviewersSheet) {
+    const rows = loadSheet(xlsxBuf, sharedStrings, reviewersSheet.file);
+    const reviewers = rowsToRaw(rows, REVIEWERS_COLUMN_MAP).map(transformReviewer).filter(Boolean);
+    writeFileSync(REVIEWERS_OUT_PATH, JSON.stringify(reviewers, null, 2));
+    console.log(`Wrote ${reviewers.length} featured reviewers to src/content/reviewers.json`);
+  } else {
+    console.log(`No "${REVIEWERS_SHEET_NAME}" tab found — leaving reviewers.json untouched.`);
+  }
 }
 
 main();

@@ -22,6 +22,7 @@ const books = defineCollection({
     tags: z.array(z.string().min(1)),
     publicationYear: z.number().int().min(1800).max(2100).nullable(),
     purchaseLink: z.string().url().nullable(),
+    reviewLink: z.string().url().nullable(),
     landingPage: z.boolean(),
     summary: z.string().min(1).nullable(),
     languages: z.array(z.string().min(1)),
@@ -43,10 +44,20 @@ const reviews = defineCollection({
   schema: z.object({
     bookId: z.string(),
     reviewer: z.string(),
-    stars: z.number().min(1).max(5),
+    stars: z.number().min(1).max(5).nullable(),
     text: z.string(),
     photo: z.string().nullable(),
   }),
 });
 
-export const collections = { books, metadata, reviews };
+const reviewers = defineCollection({
+  loader: file('src/content/reviewers.json'),
+  schema: z.object({
+    name: z.string(),
+    profileUrl: z.string().url(),
+    blurb: z.string().nullable(),
+    photo: z.string().nullable(),
+  }),
+});
+
+export const collections = { books, metadata, reviews, reviewers };
